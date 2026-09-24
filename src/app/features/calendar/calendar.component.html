@@ -1,0 +1,391 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Chambers Master Calendar & Docket</h1>
+      </div>
+      <p class="page-subtitle">Court appearances, client consultations, statutory deadlines, and clash prevention</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-primary-action" (click)="activeTab.set('hearings')" id="btn-view-hearings">
+        <app-icon name="courthouse" [size]="16" [strokeWidth]="2.2"></app-icon>
+        <span>Master Court Diary</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="activeTab.set('all'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Scheduled Events</span>
+        <div class="mini-kpi-val">{{ events().length }} <span class="mini-kpi-sub">Total Docket</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('hearings'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="courthouse" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Court Hearings</span>
+        <div class="mini-kpi-val">{{ courtHearingsCount() }} <span class="mini-kpi-sub">Appearances</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('consultations'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="user" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Consultations</span>
+        <div class="mini-kpi-val">{{ consultationsCount() }} <span class="mini-kpi-sub">Client Sessions</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('deadlines'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="clock" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Deadlines & Filings</span>
+        <div class="mini-kpi-val">{{ deadlinesCount() }} <span class="mini-kpi-sub">Statutory Dates</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. ATTORNEY COURT HEARING CLASH INSPECTOR CARD
+       ========================================================================= -->
+  <div class="clash-inspector-card">
+    <div class="clash-inspector-header">
+      <div class="clash-header-left">
+        <div class="clash-icon-box">
+          <span class="clash-bolt-emoji">⚡</span>
+        </div>
+        <div>
+          <h3 class="clash-title">Attorney Court Hearing Clash Inspector</h3>
+          <p class="clash-subtitle">Check if an attorney has overlapping appearances on the same court morning</p>
+        </div>
+      </div>
+
+      <div class="clash-controls-row">
+        <div class="clash-select-wrap">
+          <select class="clash-select" [(ngModel)]="selectedAttorneyId" id="clash-attorney-select">
+            @for (u of users(); track u.id) {
+              <option [value]="u.id">{{ u.fullName }}</option>
+            }
+          </select>
+          <span class="capsule-chevron">▾</span>
+        </div>
+
+        <div class="clash-date-wrap">
+          <input type="date" class="clash-date-input" [(ngModel)]="checkDate" id="clash-date-input" />
+        </div>
+
+        <button 
+          type="button" 
+          class="btn-check-clash" 
+          (click)="checkClashes()" 
+          [disabled]="isCheckingClashes()"
+          id="btn-run-clash-check"
+        >
+          <span>⚡ Check Clashes</span>
+        </button>
+      </div>
+    </div>
+
+    @if (clashResult()) {
+      <div class="clash-result-banner mt-3" [ngClass]="clashResult().hasClash ? 'banner-clash-danger' : 'banner-clash-success'">
+        @if (clashResult().hasClash) {
+          <div class="clash-banner-content">
+            <span class="banner-icon">⚠️</span>
+            <div>
+              <strong class="banner-strong">Court Appearance Clash Detected!</strong>
+              <span class="banner-desc">
+                {{ getSelectedAttorneyName() }} has <strong>{{ clashResult().clashCount }} court appearances</strong> scheduled for <strong>{{ checkDate | date:'fullDate' }}</strong>.
+              </span>
+            </div>
+          </div>
+        } @else {
+          <div class="clash-banner-content">
+            <span class="banner-icon">✓</span>
+            <div>
+              <strong class="banner-strong">No Schedule Clashes Found</strong>
+              <span class="banner-desc">
+                {{ getSelectedAttorneyName() }} has a clear schedule for <strong>{{ checkDate | date:'fullDate' }}</strong>.
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- =========================================================================
+       4. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">{{ activeFilterCount() }}</span>
+      </div>
+
+      <!-- Event Type Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="eventTypeFilter()" 
+          (ngModelChange)="eventTypeFilter.set($event)"
+          id="filter-event-type-select"
+        >
+          <option value="">All Event Types</option>
+          <option value="COURT_HEARING">Court Hearing</option>
+          <option value="APPOINTMENT">Client Consultation</option>
+          <option value="FILING_DEADLINE">Filing Deadline</option>
+          <option value="INTERNAL_MEETING">Internal Chambers Meeting</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Assigned Counsel Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="assignedUserFilter()" 
+          (ngModelChange)="assignedUserFilter.set($event)"
+          id="filter-counsel-select"
+        >
+          <option value="">All Counsel & Staff</option>
+          @for (u of users(); track u.id) {
+            <option [value]="u.id">{{ u.fullName }}</option>
+          }
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="btn-clear-filters" (click)="resetFilters()" title="Reset All Filters">
+          <span>✕ Reset</span>
+        </button>
+      }
+    </div>
+
+    <!-- Search Input on Right -->
+    <div class="filter-right-search">
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="15" [strokeWidth]="2" class="search-icon-svg"></app-icon>
+        <input 
+          type="text" 
+          class="crm-search-input" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search events, title, court, matter..."
+          id="calendar-search-box"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="btn-clear-search" (click)="searchQuery.set('')">✕</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. SOLID DARK MASTER CALENDAR CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'all'" 
+          (click)="activeTab.set('all')"
+          id="tab-all-events-btn"
+        >
+          <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>All Scheduled Events</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'all'">
+            {{ activeTab() === 'all' ? filteredEvents().length : events().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'hearings'" 
+          (click)="activeTab.set('hearings')"
+          id="tab-court-hearings-btn"
+        >
+          <app-icon name="courthouse" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Court Hearings</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'hearings'">
+            {{ courtHearingsCount() }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'consultations'" 
+          (click)="activeTab.set('consultations')"
+          id="tab-consultations-btn"
+        >
+          <app-icon name="user" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Client Consultations</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'consultations'">
+            {{ consultationsCount() }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'deadlines'" 
+          (click)="activeTab.set('deadlines')"
+          id="tab-deadlines-btn"
+        >
+          <app-icon name="clock" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Deadlines & Filings</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'deadlines'">
+            {{ deadlinesCount() }}
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">
+          Showing {{ filteredEvents().length }} of {{ events().length }} Events
+        </span>
+      </div>
+    </div>
+
+    <!-- CALENDAR EVENTS DATAGRID -->
+    <div class="matters-table-container">
+      <table class="finnova-matters-table">
+        <thead>
+          <tr>
+            <th style="width: 170px;">Event Date & Time</th>
+            <th>Event Title & Details</th>
+            <th style="width: 160px;">Event Type</th>
+            <th>Location / Courtroom</th>
+            <th style="width: 140px;">Matter / Docket</th>
+            <th>Assigned Counsel</th>
+            <th style="width: 130px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredEvents().length === 0) {
+            <tr>
+              <td colspan="7" class="empty-state-cell">
+                <div class="empty-state-wrap">
+                  <div class="empty-icon-box">
+                    <app-icon name="calendar" [size]="32" [strokeWidth]="1.8"></app-icon>
+                  </div>
+                  <div class="empty-text-title">No calendar events found</div>
+                  <div class="empty-text-sub">Try changing your filters or searching another keyword</div>
+                  @if (activeFilterCount() > 0) {
+                    <button type="button" class="btn-clear-filters mt-3" (click)="resetFilters()">
+                      Reset All Filters
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+
+          @for (evt of filteredEvents(); track evt.id) {
+            <tr class="matter-row">
+              <!-- Event Date -->
+              <td>
+                @if (isToday(evt.startDate)) {
+                  <div class="pulse-badge-today mb-1">
+                    <span class="pulse-dot"></span>
+                    <span>TODAY • {{ evt.startDate | date:'shortTime' }}</span>
+                  </div>
+                } @else {
+                  <div class="hearing-date-main">{{ evt.startDate | date:'mediumDate' }}</div>
+                  <div class="hearing-time-sub">{{ evt.startDate | date:'shortTime' }}</div>
+                }
+              </td>
+
+              <!-- Event Title -->
+              <td>
+                <div class="event-title-cell">
+                  <span class="event-main-title">{{ evt.title }}</span>
+                  @if (evt.description) {
+                    <span class="event-desc-sub">{{ evt.description }}</span>
+                  }
+                </div>
+              </td>
+
+              <!-- Type Badge -->
+              <td>
+                <span class="event-type-chip" [ngClass]="{
+                  'type-hearing': evt.eventType === 'COURT_HEARING',
+                  'type-consult': evt.eventType === 'APPOINTMENT' || evt.eventType === 'CONSULTATION',
+                  'type-deadline': evt.eventType === 'FILING_DEADLINE' || evt.eventType === 'STATUTORY_DEADLINE',
+                  'type-meeting': evt.eventType === 'INTERNAL_MEETING'
+                }">
+                  {{ evt.eventType?.replace('_', ' ') }}
+                </span>
+              </td>
+
+              <!-- Location -->
+              <td>
+                <div class="location-cell">
+                  <span class="location-text">📍 {{ evt.location || 'Law Chambers' }}</span>
+                </div>
+              </td>
+
+              <!-- Matter / Docket -->
+              <td>
+                @if (evt.matter) {
+                  <div class="matter-link-cell">
+                    <a [routerLink]="['/matters', evt.matter.id]" class="docket-num-badge font-mono" title="Open Case File">
+                      {{ evt.matter.matterNumber }}
+                    </a>
+                  </div>
+                } @else {
+                  <span class="general-chip">Chambers General</span>
+                }
+              </td>
+
+              <!-- Assigned User -->
+              <td>
+                <div class="counsel-cell">
+                  <div class="counsel-avatar">
+                    {{ (evt.user?.fullName || 'CH').substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div class="counsel-info">
+                    <span class="counsel-name">{{ evt.user?.fullName || 'All Chambers' }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Action -->
+              <td style="text-align: right;">
+                @if (evt.matter?.id) {
+                  <a [routerLink]="['/matters', evt.matter.id]" class="btn-docket-case">
+                    <span>Open Case →</span>
+                  </a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

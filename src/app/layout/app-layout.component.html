@@ -1,0 +1,338 @@
+<div class="lpms-top-layout">
+  <!-- MOBILE BACKDROP OVERLAY -->
+  @if (mobileMenuOpen()) {
+    <div class="mobile-overlay" (click)="closeMobileMenu()"></div>
+  }
+
+  <!-- =========================================================================
+       TOP HEADER (Brand Left, Pill Navbar Center, Actions & User Right)
+       ========================================================================= -->
+  <header class="lpms-navbar-header">
+    <!-- LEFT: BRANDING & STATUS -->
+    <div class="header-brand-section">
+      <a routerLink="/dashboard" class="brand-link">
+        <div class="brand-emblem">
+          <app-icon name="scale" [size]="22" [strokeWidth]="2.5"></app-icon>
+        </div>
+        <div class="brand-info">
+          <span class="brand-name">LPMS</span>
+          <span class="brand-caption">Chambers Suite</span>
+        </div>
+      </a>
+
+      <div class="case-counter-badge" title="Active chambers matter files in custody">
+        <span class="badge-num">80</span>
+        <span class="badge-txt">Cases</span>
+      </div>
+    </div>
+
+    <!-- CENTER: PILL NAVIGATION BAR (Operations, Diary, Finance) -->
+    <nav class="header-pill-nav" aria-label="Top Navigation">
+      <!-- 1. OPERATIONS TAB WITH HOVER FLYOUT -->
+      <div 
+        class="nav-pillar-tab-wrapper"
+        (mouseenter)="onMouseEnterPillar('operations')"
+        (mouseleave)="onMouseLeavePillar()"
+      >
+        <button 
+          type="button" 
+          class="pillar-pill-btn"
+          [class.active]="activePillar() === 'operations'"
+          (click)="toggleFlyout('operations', $event)"
+        >
+          <app-icon name="dashboard" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Operations</span>
+          <span class="dropdown-chevron">▾</span>
+        </button>
+
+        <!-- Operations Floating Flyout Menu -->
+        <div 
+          class="pillar-flyout-menu" 
+          [class.show]="activeFlyout() === 'operations'"
+          (mouseenter)="onMouseEnterPillar('operations')"
+          (mouseleave)="onMouseLeavePillar()"
+        >
+          <div class="flyout-hover-bridge"></div>
+          <div class="flyout-arrow"></div>
+          <div class="flyout-header">
+            <span class="flyout-title">Case Operations & CRM</span>
+          </div>
+
+          <div class="flyout-grid">
+            <a [routerLink]="['/dashboard']" class="flyout-item" (click)="navigateTo('/dashboard', $event)">
+              <div class="flyout-icon icon-box-primary">
+                <app-icon name="dashboard" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Practice Dashboard</span>
+                <span class="flyout-item-sub">Court schedule, KPIs & overviews</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/clients']" class="flyout-item" (click)="navigateTo('/clients', $event)">
+              <div class="flyout-icon icon-box-primary">
+                <app-icon name="users" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Clients & CRM</span>
+                <span class="flyout-item-sub">KYC, consultations & retainers</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/matters']" class="flyout-item" (click)="navigateTo('/matters', $event)">
+              <div class="flyout-icon icon-box-primary">
+                <app-icon name="folder-open" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Legal Matters</span>
+                <span class="flyout-item-sub">8-Tab case workspace & pleadings</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/court-cases']" class="flyout-item" (click)="navigateTo('/court-cases', $event)">
+              <div class="flyout-icon icon-box-primary">
+                <app-icon name="courthouse" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Courts & Docket</span>
+                <span class="flyout-item-sub">Hearings, orders & bench trial logs</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. DIARY TAB WITH HOVER FLYOUT -->
+      <div 
+        class="nav-pillar-tab-wrapper"
+        (mouseenter)="onMouseEnterPillar('diary')"
+        (mouseleave)="onMouseLeavePillar()"
+      >
+        <button 
+          type="button" 
+          class="pillar-pill-btn"
+          [class.active]="activePillar() === 'diary'"
+          (click)="toggleFlyout('diary', $event)"
+        >
+          <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Diary</span>
+          <span class="dropdown-chevron">▾</span>
+        </button>
+
+        <!-- Diary Floating Flyout Menu -->
+        <div 
+          class="pillar-flyout-menu" 
+          [class.show]="activeFlyout() === 'diary'"
+          (mouseenter)="onMouseEnterPillar('diary')"
+          (mouseleave)="onMouseLeavePillar()"
+        >
+          <div class="flyout-hover-bridge"></div>
+          <div class="flyout-arrow"></div>
+          <div class="flyout-header">
+            <span class="flyout-title">Court Diary & Schedules</span>
+          </div>
+
+          <div class="flyout-grid">
+            <a [routerLink]="['/calendar']" class="flyout-item" (click)="navigateTo('/calendar', $event)">
+              <div class="flyout-icon icon-box-warning">
+                <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Court Diary</span>
+                <span class="flyout-item-sub">Master calendar, clashes & hearings</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/tasks']" class="flyout-item" (click)="navigateTo('/tasks', $event)">
+              <div class="flyout-icon icon-box-critical">
+                <app-icon name="clipboard-check" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Legal Tasks</span>
+                <span class="flyout-item-sub">Filing deadlines & assignments</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. FINANCE & ADMIN TAB WITH HOVER FLYOUT -->
+      <div 
+        class="nav-pillar-tab-wrapper"
+        (mouseenter)="onMouseEnterPillar('finance')"
+        (mouseleave)="onMouseLeavePillar()"
+      >
+        <button 
+          type="button" 
+          class="pillar-pill-btn"
+          [class.active]="activePillar() === 'finance'"
+          (click)="toggleFlyout('finance', $event)"
+        >
+          <app-icon name="billing" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Finance</span>
+          <span class="dropdown-chevron">▾</span>
+        </button>
+
+        <!-- Finance Floating Flyout Menu -->
+        <div 
+          class="pillar-flyout-menu" 
+          [class.show]="activeFlyout() === 'finance'"
+          (mouseenter)="onMouseEnterPillar('finance')"
+          (mouseleave)="onMouseLeavePillar()"
+        >
+          <div class="flyout-hover-bridge"></div>
+          <div class="flyout-arrow"></div>
+          <div class="flyout-header">
+            <span class="flyout-title">Chambers Finance & Administration</span>
+          </div>
+
+          <div class="flyout-grid">
+            <a [routerLink]="['/billing']" class="flyout-item" (click)="navigateTo('/billing', $event)">
+              <div class="flyout-icon icon-box-safe">
+                <app-icon name="billing" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Billing & Fees</span>
+                <span class="flyout-item-sub">Invoicing, receipts & uncollected fees</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/vault']" class="flyout-item" (click)="navigateTo('/vault', $event)">
+              <div class="flyout-icon icon-box-info">
+                <app-icon name="vault" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Safe Vault</span>
+                <span class="flyout-item-sub">Physical deed custody & barcoded logs</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/reports']" class="flyout-item" (click)="navigateTo('/reports', $event)">
+              <div class="flyout-icon icon-box-primary">
+                <app-icon name="reports" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">Reports & Stats</span>
+                <span class="flyout-item-sub">Attorney workload & cash flow metrics</span>
+              </div>
+            </a>
+
+            <a [routerLink]="['/settings']" class="flyout-item" (click)="navigateTo('/settings', $event)">
+              <div class="flyout-icon icon-box-secondary">
+                <app-icon name="settings" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="flyout-meta">
+                <span class="flyout-item-title">System Settings</span>
+                <span class="flyout-item-sub">Chambers rules, users & audit logs</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- RIGHT: SEARCH, ALERTS, THEME & USER IDENTITY -->
+    <div class="header-right-actions">
+      <!-- Search Input Pill -->
+      <div class="nav-search-box">
+        <span class="search-ico">
+          <app-icon name="search" [size]="16" [strokeWidth]="2.2"></app-icon>
+        </span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (keyup.enter)="onSearch()"
+          placeholder="Search matters, clients, cases..." 
+          class="nav-search-input"
+        />
+      </div>
+
+      <!-- Hearing Alert Bell -->
+      <button type="button" class="btn-icon" title="Court Hearing Alerts" routerLink="/calendar">
+        <app-icon name="calendar" [size]="18" [strokeWidth]="2"></app-icon>
+        <span class="alert-pulse-dot"></span>
+      </button>
+
+      <!-- 1-Click Theme Switcher -->
+      <button 
+        type="button" 
+        class="theme-toggle-capsule" 
+        (click)="themeService.toggleTheme()" 
+        [title]="themeService.currentTheme() === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        @if (themeService.currentTheme() === 'dark') {
+          <app-icon name="sun" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span class="theme-text">Light</span>
+        } @else {
+          <app-icon name="moon" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span class="theme-text">Dark</span>
+        }
+      </button>
+
+      <!-- User Profile Capsule -->
+      <div class="user-profile-capsule" routerLink="/settings">
+        <div class="user-avatar-circle">
+          <span>RP</span>
+        </div>
+        <div class="user-text-meta">
+          <span class="user-name-label">{{ authService.currentUser()?.fullName || 'Adv. Rohan Perera, PC' }}</span>
+          <span class="user-role-sub">Managing Counsel</span>
+        </div>
+      </div>
+
+      <!-- Logout Button -->
+      <button type="button" class="btn-icon" title="Sign Out" (click)="logout()">
+        <app-icon name="logout" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </button>
+
+      <!-- Mobile Hamburger -->
+      <button 
+        type="button" 
+        class="btn-icon mobile-toggle-btn" 
+        (click)="toggleMobileMenu()" 
+        aria-label="Toggle Mobile Navigation"
+      >
+        <app-icon name="menu" [size]="20" [strokeWidth]="2.4"></app-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MOBILE NAVIGATION DRAWER
+       ========================================================================= -->
+  @if (mobileMenuOpen()) {
+    <div class="mobile-drawer-sheet">
+      <div class="drawer-header">
+        <div class="brand-info">
+          <span class="brand-name">LPMS Chambers</span>
+        </div>
+        <button class="btn-icon" (click)="closeMobileMenu()">✕</button>
+      </div>
+
+      <div class="drawer-nav-sections">
+        <span class="section-title">Case Operations</span>
+        <a routerLink="/dashboard" (click)="closeMobileMenu()" class="drawer-link">Practice Dashboard</a>
+        <a routerLink="/clients" (click)="closeMobileMenu()" class="drawer-link">Clients & CRM</a>
+        <a routerLink="/matters" (click)="closeMobileMenu()" class="drawer-link">Legal Matters</a>
+        <a routerLink="/court-cases" (click)="closeMobileMenu()" class="drawer-link">Courts & Docket</a>
+
+        <span class="section-title mt-4">Court Diary</span>
+        <a routerLink="/calendar" (click)="closeMobileMenu()" class="drawer-link">Master Calendar</a>
+        <a routerLink="/tasks" (click)="closeMobileMenu()" class="drawer-link">Legal Tasks</a>
+
+        <span class="section-title mt-4">Finance & Admin</span>
+        <a routerLink="/billing" (click)="closeMobileMenu()" class="drawer-link">Billing & Fees</a>
+        <a routerLink="/vault" (click)="closeMobileMenu()" class="drawer-link">Safe Vault</a>
+        <a routerLink="/reports" (click)="closeMobileMenu()" class="drawer-link">Reports & Stats</a>
+        <a routerLink="/settings" (click)="closeMobileMenu()" class="drawer-link">Administration</a>
+      </div>
+    </div>
+  }
+
+  <!-- =========================================================================
+       FULL-WIDTH PAGE CONTENT
+       ========================================================================= -->
+  <main class="lpms-fullwidth-canvas">
+    <router-outlet></router-outlet>
+  </main>
+</div>

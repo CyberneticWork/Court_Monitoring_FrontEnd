@@ -1,0 +1,460 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle + Action CTA Button)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Legal Tasks & Action Board</h1>
+      </div>
+      <p class="page-subtitle">Tracking follow-ups, pleadings drafting, court filings, and deadlines</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-create-invoice" (click)="openCreateModal()" id="btn-create-task">
+        <span class="btn-plus-sym">+</span>
+        <span>Create Legal Task</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="setFilter('all'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="clipboard-check" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Active Tasks</span>
+        <div class="mini-kpi-val">{{ totalTasksCount() }} <span class="mini-kpi-sub">Total Items</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="setFilter('overdue'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="alert-circle" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Overdue Tasks</span>
+        <div class="mini-kpi-val">{{ overdueCount() }} <span class="mini-kpi-sub">Urgent Action</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="setFilter('due-today'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Due Today</span>
+        <div class="mini-kpi-val">{{ todayCount() }} <span class="mini-kpi-sub">Listed Today</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="setFilter('all'); statusFilter.set('COMPLETED')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="tasks" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Completed</span>
+        <div class="mini-kpi-val">{{ completedCount() }} <span class="mini-kpi-sub">Finished Tasks</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">{{ activeFilterCount() }}</span>
+      </div>
+
+      <!-- Priority Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="priorityFilter()" 
+          (ngModelChange)="priorityFilter.set($event)"
+          id="filter-priority-select"
+        >
+          <option value="">All Priorities</option>
+          <option value="HIGH">High / Urgent</option>
+          <option value="MEDIUM">Medium Priority</option>
+          <option value="LOW">Low Priority</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Status Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="statusFilter()" 
+          (ngModelChange)="statusFilter.set($event)"
+          id="filter-status-select"
+        >
+          <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="OVERDUE">Overdue</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Assigned Lawyer Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="assignedUserFilter()" 
+          (ngModelChange)="assignedUserFilter.set($event)"
+          id="filter-assigned-user-select"
+        >
+          <option value="">All Assigned Counsel</option>
+          @for (u of users(); track u.id) {
+            <option [value]="u.id">{{ u.fullName }}</option>
+          }
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="btn-clear-filters" (click)="resetFilters()" title="Reset All Filters">
+          <span>✕ Reset</span>
+        </button>
+      }
+    </div>
+
+    <!-- Search Input on Right -->
+    <div class="filter-right-search">
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="15" [strokeWidth]="2" class="search-icon-svg"></app-icon>
+        <input 
+          type="text" 
+          class="crm-search-input" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search task title, instruction, matter..."
+          id="tasks-search-box"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="btn-clear-search" (click)="searchQuery.set('')">✕</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. SOLID DARK MASTER ACTION BOARD CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'all'" 
+          (click)="setFilter('all')"
+          id="tab-all-tasks-btn"
+        >
+          <app-icon name="clipboard-check" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>All Active Tasks</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'all'">
+            {{ tasks().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'due-today'" 
+          (click)="setFilter('due-today')"
+          id="tab-due-today-btn"
+        >
+          <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Due Today</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'due-today'">
+            {{ todayCount() }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'overdue'" 
+          (click)="setFilter('overdue')"
+          id="tab-overdue-btn"
+        >
+          <app-icon name="alert-circle" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Overdue Tasks</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'overdue'">
+            {{ overdueCount() }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'my-tasks'" 
+          (click)="setFilter('my-tasks')"
+          id="tab-my-tasks-btn"
+        >
+          <app-icon name="user" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>My Assigned Tasks</span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">
+          Showing {{ filteredTasks().length }} Tasks
+        </span>
+      </div>
+    </div>
+
+    <!-- TASKS DATAGRID -->
+    <div class="matters-table-container">
+      <table class="finnova-matters-table">
+        <thead>
+          <tr>
+            <th style="width: 120px;">Status</th>
+            <th>Task Title & Instructions</th>
+            <th style="width: 110px;">Priority</th>
+            <th style="width: 140px;">Related Matter</th>
+            <th>Assigned Counsel</th>
+            <th style="width: 140px;">Due Date</th>
+            <th style="width: 130px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredTasks().length === 0) {
+            <tr>
+              <td colspan="7" class="empty-state-cell">
+                <div class="empty-state-wrap">
+                  <div class="empty-icon-box">
+                    <app-icon name="clipboard-check" [size]="32" [strokeWidth]="1.8"></app-icon>
+                  </div>
+                  <div class="empty-text-title">No legal tasks found</div>
+                  <div class="empty-text-sub">Try changing your filters or create a new task above</div>
+                  @if (activeFilterCount() > 0) {
+                    <button type="button" class="btn-clear-filters mt-3" (click)="resetFilters()">
+                      Reset All Filters
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+
+          @for (t of filteredTasks(); track t.id) {
+            <tr class="matter-row">
+              <!-- Status -->
+              <td>
+                <span class="status-chip" [ngClass]="{
+                  'status-completed': t.status === 'COMPLETED',
+                  'status-postponed': t.status === 'OVERDUE' || isOverdue(t.dueDate, t.status),
+                  'status-scheduled': t.status === 'IN_PROGRESS',
+                  'status-pending': t.status === 'PENDING' || !t.status
+                }">
+                  {{ t.status === 'PENDING' ? 'PENDING' : t.status }}
+                </span>
+              </td>
+
+              <!-- Task Title & Description -->
+              <td>
+                <div class="task-title-cell">
+                  <span class="task-main-title" [class.task-title-done]="t.status === 'COMPLETED'">
+                    {{ t.title }}
+                  </span>
+                  @if (t.description) {
+                    <span class="task-desc-sub">{{ t.description }}</span>
+                  }
+                </div>
+              </td>
+
+              <!-- Priority -->
+              <td>
+                <span class="priority-chip" [ngClass]="{
+                  'priority-high': t.priority === 'HIGH',
+                  'priority-medium': t.priority === 'MEDIUM',
+                  'priority-low': t.priority === 'LOW'
+                }">
+                  {{ t.priority || 'MEDIUM' }}
+                </span>
+              </td>
+
+              <!-- Related Matter -->
+              <td>
+                @if (t.matter) {
+                  <div class="matter-link-cell">
+                    <a [routerLink]="['/matters', t.matter.id]" class="docket-num-badge font-mono" title="Open Case File">
+                      {{ t.matter.matterNumber }}
+                    </a>
+                  </div>
+                } @else {
+                  <span class="general-chip">General Chamber</span>
+                }
+              </td>
+
+              <!-- Assigned To -->
+              <td>
+                <div class="counsel-cell">
+                  <div class="counsel-avatar">
+                    {{ (t.assignedTo?.fullName || 'CH').substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div class="counsel-info">
+                    <span class="counsel-name">{{ t.assignedTo?.fullName || 'Unassigned' }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Due Date -->
+              <td>
+                @if (isToday(t.dueDate)) {
+                  <div class="pulse-badge-today">
+                    <span class="pulse-dot"></span>
+                    <span>TODAY</span>
+                  </div>
+                } @else if (isOverdue(t.dueDate, t.status)) {
+                  <div class="overdue-tag">
+                    <span class="overdue-date">{{ t.dueDate | date:'mediumDate' }}</span>
+                    <span class="overdue-sub-label">OVERDUE</span>
+                  </div>
+                } @else {
+                  <span class="due-date-regular">{{ t.dueDate | date:'mediumDate' }}</span>
+                }
+              </td>
+
+              <!-- Action -->
+              <td style="text-align: right;">
+                @if (t.status !== 'COMPLETED') {
+                  <button type="button" class="btn-complete-task" (click)="toggleTask(t)" title="Mark as Completed">
+                    <app-icon name="check" [size]="14" [strokeWidth]="2.5"></app-icon>
+                    <span>Complete</span>
+                  </button>
+                } @else {
+                  <span class="completed-checkmark-chip">✓ Done</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. CREATE LEGAL TASK MODAL (Dual-Theme Compliant)
+       ========================================================================= -->
+  @if (showCreateModal()) {
+    <div class="modal-clean-backdrop" (click)="closeCreateModal()">
+      <div class="modal-window-clean task-modal-window" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-header-left">
+            <div class="modal-header-icon-box icon-indigo">
+              <app-icon name="clipboard-check" [size]="22" [strokeWidth]="2.2"></app-icon>
+            </div>
+            <div>
+              <h2 class="modal-clean-title">Create Legal Task & Action Item</h2>
+              <p class="modal-clean-sub">Assign drafting, court filings, follow-ups, and statutory deadlines</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeCreateModal()" title="Close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-clean-body">
+          <form class="clean-form-grid" (ngSubmit)="createTask()">
+            <!-- Task Title -->
+            <div class="form-group full-width">
+              <label class="clean-label">Task Title / Subject <span class="text-rose">*</span></label>
+              <input 
+                type="text" 
+                class="clean-input" 
+                [(ngModel)]="newTask.title" 
+                name="title" 
+                placeholder="e.g. Draft Written Submissions on Jurisdiction Clause" 
+                required 
+              />
+            </div>
+
+            <!-- Description -->
+            <div class="form-group full-width">
+              <label class="clean-label">Instructions & Action Details</label>
+              <textarea 
+                class="clean-textarea" 
+                rows="3" 
+                [(ngModel)]="newTask.description" 
+                name="description" 
+                placeholder="Detailed instructions for counsel or legal secretary..."
+              ></textarea>
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group">
+              <label class="clean-label">Priority Level</label>
+              <select class="clean-select" [(ngModel)]="newTask.priority" name="priority">
+                <option value="HIGH">🔥 High / Urgent</option>
+                <option value="MEDIUM">⚡ Medium Priority</option>
+                <option value="LOW">🌱 Low Priority</option>
+              </select>
+            </div>
+
+            <!-- Due Date -->
+            <div class="form-group">
+              <label class="clean-label">Due Date <span class="text-rose">*</span></label>
+              <input 
+                type="date" 
+                class="clean-input" 
+                [(ngModel)]="newTask.dueDate" 
+                name="dueDate" 
+                required 
+              />
+            </div>
+
+            <!-- Related Matter -->
+            <div class="form-group">
+              <label class="clean-label">Related Legal Matter</label>
+              <select class="clean-select" [(ngModel)]="newTask.matterId" name="matterId">
+                <option value="">-- General Chambers Task --</option>
+                @for (m of matters(); track m.id) {
+                  <option [value]="m.id">{{ m.matterNumber }} - {{ m.title }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Assigned Counsel -->
+            <div class="form-group">
+              <label class="clean-label">Assign To Counsel / Staff</label>
+              <select class="clean-select" [(ngModel)]="newTask.assignedToId" name="assignedToId">
+                @for (u of users(); track u.id) {
+                  <option [value]="u.id">{{ u.fullName }}</option>
+                }
+              </select>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-clean-secondary" (click)="closeCreateModal()">Cancel</button>
+          <button 
+            type="button" 
+            class="btn-primary-action" 
+            [disabled]="!newTask.title.trim() || isSubmitting()" 
+            (click)="createTask()"
+          >
+            <span>{{ isSubmitting() ? 'Creating...' : '+ Create Task' }}</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

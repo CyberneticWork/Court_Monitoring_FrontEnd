@@ -1,0 +1,665 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Courts & Master Hearings Docket</h1>
+      </div>
+      <p class="page-subtitle">Judicial dockets, court master data, trial schedules, and appearance records</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-primary-action" (click)="activeTab.set('hearings'); resetFilters()" id="btn-view-all-hearings">
+        <app-icon name="courthouse" [size]="16" [strokeWidth]="2.2"></app-icon>
+        <span>Master Docket Schedule</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="activeTab.set('hearings'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="courthouse" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Master Hearings</span>
+        <div class="mini-kpi-val">{{ hearings().length }} <span class="mini-kpi-sub">Total Appearances</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('hearings')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="alert-circle" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Today's Docket</span>
+        <div class="mini-kpi-val">{{ todayHearingsCount() }} <span class="mini-kpi-sub">Listed Today</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('hearings'); purposeFilter.set('TRIAL')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="gavel" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Trial & Arguments</span>
+        <div class="mini-kpi-val">{{ trialHearingsCount() }} <span class="mini-kpi-sub">In Court / Trial</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('courts'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="briefcase" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Courts Master</span>
+        <div class="mini-kpi-val">{{ courts().length }} <span class="mini-kpi-sub">Benches Registered</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">{{ activeFilterCount() }}</span>
+      </div>
+
+      <!-- Hearing Purpose Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="purposeFilter()" 
+          (ngModelChange)="purposeFilter.set($event)"
+          id="filter-purpose-select"
+        >
+          <option value="">All Hearing Purposes</option>
+          <option value="TRIAL">Trial / Evidence</option>
+          <option value="CALLING">Calling / Appearance</option>
+          <option value="ARGUMENT">Argument / Support</option>
+          <option value="OBJECTIONS">Objections / Inquiries</option>
+          <option value="JUDGEMENT">Judgment / Order</option>
+          <option value="FILING_OF_PLAINT">Filing of Plaint</option>
+          <option value="FURTHER_TRIAL">Further Trial</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Hearing Status Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="statusFilter()" 
+          (ngModelChange)="statusFilter.set($event)"
+          id="filter-status-select"
+        >
+          <option value="">All Statuses</option>
+          <option value="SCHEDULED">Scheduled</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="POSTPONED">Postponed / Adjourned</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Court Bench Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="courtFilter()" 
+          (ngModelChange)="courtFilter.set($event)"
+          id="filter-court-select"
+        >
+          <option value="">All Courts & Benches</option>
+          @for (ct of courts(); track ct.id) {
+            <option [value]="ct.id">{{ ct.name }}</option>
+          }
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="btn-clear-filters" (click)="resetFilters()" title="Reset All Filters">
+          <span>✕ Reset</span>
+        </button>
+      }
+    </div>
+
+    <!-- Search Input on Right -->
+    <div class="filter-right-search">
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="15" [strokeWidth]="2" class="search-icon-svg"></app-icon>
+        <input 
+          type="text" 
+          class="crm-search-input" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search docket, case no, matter, court, judge..."
+          id="hearing-search-box"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="btn-clear-search" (click)="searchQuery.set('')">✕</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. SOLID DARK MASTER DOCKET CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'hearings'" 
+          (click)="activeTab.set('hearings')"
+          id="tab-hearings-btn"
+        >
+          <app-icon name="courthouse" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Master Hearing Schedule</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'hearings'">
+            {{ filteredHearings().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'cases'" 
+          (click)="activeTab.set('cases')"
+          id="tab-cases-btn"
+        >
+          <app-icon name="folder-open" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Registered Court Cases</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'cases'">
+            {{ filteredCourtCases().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'courts'" 
+          (click)="activeTab.set('courts')"
+          id="tab-courts-btn"
+        >
+          <app-icon name="gavel" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Courts & Jurisdictions Master</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'courts'">
+            {{ filteredCourts().length }}
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">
+          @if (activeTab() === 'hearings') { Showing {{ filteredHearings().length }} of {{ hearings().length }} Appearances }
+          @if (activeTab() === 'cases') { Showing {{ filteredCourtCases().length }} of {{ courtCases().length }} Court Cases }
+          @if (activeTab() === 'courts') { Showing {{ filteredCourts().length }} of {{ courts().length }} Benches }
+        </span>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 1: MASTER HEARING SCHEDULE TABLE
+         ========================================================================= -->
+    @if (activeTab() === 'hearings') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th style="width: 175px;">Hearing Date & Time</th>
+              <th>Court & Courtroom</th>
+              <th style="width: 145px;">Case Docket No.</th>
+              <th>Matter Title</th>
+              <th style="width: 130px;">Purpose</th>
+              <th style="width: 115px;">Status</th>
+              <th>Directions / Outcome</th>
+              <th style="width: 155px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredHearings().length === 0) {
+              <tr>
+                <td colspan="8" class="empty-state-cell">
+                  <div class="empty-state-wrap">
+                    <div class="empty-icon-box">
+                      <app-icon name="courthouse" [size]="32" [strokeWidth]="1.8"></app-icon>
+                    </div>
+                    <div class="empty-text-title">No court appearances found</div>
+                    <div class="empty-text-sub">Try changing your search keywords or resetting active filters</div>
+                    @if (activeFilterCount() > 0) {
+                      <button type="button" class="btn-clear-filters mt-3" (click)="resetFilters()">
+                        Reset All Filters
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (h of filteredHearings(); track h.id) {
+              <tr class="matter-row clickable-docket-row" (click)="openHearingModal(h)">
+                <!-- Hearing Date & Time -->
+                <td>
+                  @if (isToday(h.hearingDate)) {
+                    <div class="pulse-badge-today mb-1">
+                      <span class="pulse-dot"></span>
+                      <span>TODAY • {{ h.hearingTime || '09:30 AM' }}</span>
+                    </div>
+                  } @else {
+                    <div class="hearing-date-main">{{ h.hearingDate | date:'mediumDate' }}</div>
+                    <div class="hearing-time-sub">{{ h.hearingTime || '09:30 AM' }}</div>
+                  }
+                </td>
+
+                <!-- Court & Courtroom -->
+                <td>
+                  <div class="court-info-cell">
+                    <span class="court-name-bold">{{ h.courtCase?.court?.name || 'District Court' }}</span>
+                    <div class="courtroom-tag-row">
+                      <span class="courtroom-chip">📍 {{ h.courtroom || h.courtCase?.court?.courtroomNo || 'Main Courtroom' }}</span>
+                      @if (h.courtCase?.court?.location) {
+                        <span class="court-loc-text">• {{ h.courtCase?.court?.location }}</span>
+                      }
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Case Docket No. -->
+                <td>
+                  <div class="docket-num-badge font-mono">{{ h.courtCase?.officialCaseNumber || 'DSP/0124/2026' }}</div>
+                </td>
+
+                <!-- Matter Title -->
+                <td>
+                  <div class="matter-title-cell">
+                    <a 
+                      [routerLink]="['/matters', h.courtCase?.matter?.id]" 
+                      (click)="$event.stopPropagation()"
+                      class="matter-main-title"
+                    >
+                      {{ h.courtCase?.matter?.title }}
+                    </a>
+                    <div class="matter-num-sub font-mono">{{ h.courtCase?.matter?.matterNumber }}</div>
+                  </div>
+                </td>
+
+                <!-- Purpose -->
+                <td>
+                  <span class="purpose-chip" [ngClass]="{
+                    'purpose-trial': h.purpose === 'TRIAL' || h.purpose === 'FURTHER_TRIAL' || h.purpose === 'ARGUMENT',
+                    'purpose-calling': h.purpose === 'CALLING' || h.purpose === 'OBJECTIONS',
+                    'purpose-order': h.purpose === 'JUDGEMENT' || h.purpose === 'FILING_OF_PLAINT'
+                  }">
+                    {{ h.purpose?.replace('_', ' ') }}
+                  </span>
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="status-chip" [ngClass]="{
+                    'status-completed': h.status === 'COMPLETED',
+                    'status-scheduled': h.status === 'SCHEDULED' || !h.status,
+                    'status-postponed': h.status === 'POSTPONED' || h.status === 'ADJOURNED'
+                  }">
+                    {{ h.status || 'SCHEDULED' }}
+                  </span>
+                </td>
+
+                <!-- Directions / Outcome -->
+                <td>
+                  <div class="outcome-cell">
+                    <div class="outcome-text">{{ h.outcomeSummary || h.courtDirections || 'Scheduled for hearing' }}</div>
+                    @if (h.nextHearingDate) {
+                      <div class="next-hearing-tag">
+                        <span class="next-label">Next:</span>
+                        <span class="next-date">{{ h.nextHearingDate | date:'mediumDate' }}</span>
+                      </div>
+                    }
+                  </div>
+                </td>
+
+                <!-- Action -->
+                <td style="text-align: right;">
+                  <div class="docket-actions-wrap" (click)="$event.stopPropagation()">
+                    <button 
+                      type="button" 
+                      class="btn-docket-view" 
+                      (click)="openHearingModal(h)"
+                      title="View Appearance Details"
+                    >
+                      <app-icon name="search" [size]="13" [strokeWidth]="2.2"></app-icon>
+                      <span>View</span>
+                    </button>
+                    @if (h.courtCase?.matter?.id) {
+                      <a 
+                        [routerLink]="['/matters', h.courtCase?.matter?.id]" 
+                        class="btn-docket-case"
+                        title="Open Case File Workspace"
+                      >
+                        <app-icon name="folder-open" [size]="13" [strokeWidth]="2.2"></app-icon>
+                        <span>Case</span>
+                      </a>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- =========================================================================
+         TAB 2: REGISTERED COURT CASES TABLE
+         ========================================================================= -->
+    @if (activeTab() === 'cases') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th style="width: 155px;">Official Case No.</th>
+              <th>Court & Jurisdiction</th>
+              <th>Matter Reference</th>
+              <th style="width: 125px;">Client Role</th>
+              <th style="width: 130px;">Filing Date</th>
+              <th style="width: 120px;">Current Stage</th>
+              <th style="width: 110px;">Hearings</th>
+              <th style="width: 140px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredCourtCases().length === 0) {
+              <tr>
+                <td colspan="8" class="empty-state-cell">
+                  <div class="empty-state-wrap">
+                    <div class="empty-icon-box">
+                      <app-icon name="folder-open" [size]="32" [strokeWidth]="1.8"></app-icon>
+                    </div>
+                    <div class="empty-text-title">No court cases found</div>
+                    <div class="empty-text-sub">Try searching with another case number or court name</div>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (c of filteredCourtCases(); track c.id) {
+              <tr class="matter-row">
+                <!-- Case No -->
+                <td>
+                  <span class="docket-num-badge font-mono">{{ c.officialCaseNumber }}</span>
+                </td>
+
+                <!-- Court -->
+                <td>
+                  <div class="court-info-cell">
+                    <span class="court-name-bold">{{ c.court?.name || 'High Court' }}</span>
+                    <div class="court-loc-text">{{ c.court?.location }} • {{ c.court?.jurisdiction }}</div>
+                  </div>
+                </td>
+
+                <!-- Matter Title -->
+                <td>
+                  <div class="matter-title-cell">
+                    <a [routerLink]="['/matters', c.matter?.id]" class="matter-main-title">
+                      {{ c.matter?.title }}
+                    </a>
+                    <div class="matter-num-sub font-mono">{{ c.matter?.matterNumber }}</div>
+                  </div>
+                </td>
+
+                <!-- Client Role -->
+                <td>
+                  <span class="client-role-chip">{{ c.clientRole || 'Plaintiff' }}</span>
+                </td>
+
+                <!-- Filing Date -->
+                <td>
+                  <span class="filing-date-text">{{ c.filingDate | date:'mediumDate' }}</span>
+                </td>
+
+                <!-- Current Stage -->
+                <td>
+                  <span class="stage-chip-blue">{{ c.currentStage || 'TRIAL' }}</span>
+                </td>
+
+                <!-- Hearings Count -->
+                <td>
+                  <span class="hearings-count-pill">{{ c._count?.hearings || 0 }} Hearings</span>
+                </td>
+
+                <!-- Action -->
+                <td style="text-align: right;">
+                  <a [routerLink]="['/matters', c.matter?.id]" class="btn-docket-case">
+                    <span>Open Matter →</span>
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- =========================================================================
+         TAB 3: COURTS & JURISDICTIONS MASTER
+         ========================================================================= -->
+    @if (activeTab() === 'courts') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th>Court Name</th>
+              <th style="width: 170px;">Jurisdiction</th>
+              <th style="width: 150px;">Location</th>
+              <th style="width: 160px;">Primary Courtroom</th>
+              <th>Presiding Judge</th>
+              <th style="width: 160px;">Registry Contact</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredCourts().length === 0) {
+              <tr>
+                <td colspan="6" class="empty-state-cell">
+                  <div class="empty-state-wrap">
+                    <div class="empty-icon-box">
+                      <app-icon name="gavel" [size]="32" [strokeWidth]="1.8"></app-icon>
+                    </div>
+                    <div class="empty-text-title">No court records in master data</div>
+                    <div class="empty-text-sub">All registered courts and benches will be listed here</div>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (ct of filteredCourts(); track ct.id) {
+              <tr class="matter-row">
+                <!-- Court Name -->
+                <td>
+                  <div class="court-entry-cell">
+                    <div class="court-icon-square">
+                      <app-icon name="courthouse" [size]="16" [strokeWidth]="2.2"></app-icon>
+                    </div>
+                    <span class="court-name-bold">{{ ct.name }}</span>
+                  </div>
+                </td>
+
+                <!-- Jurisdiction -->
+                <td>
+                  <span class="jurisdiction-chip">{{ ct.jurisdiction }}</span>
+                </td>
+
+                <!-- Location -->
+                <td>
+                  <span class="location-text">📍 {{ ct.location }}</span>
+                </td>
+
+                <!-- Courtroom -->
+                <td>
+                  <span class="courtroom-chip">{{ ct.courtroomNo || 'Main Courtroom' }}</span>
+                </td>
+
+                <!-- Presiding Judge -->
+                <td>
+                  <div class="judge-cell">
+                    <span class="judge-name-bold">⚖️ {{ ct.judgeName || 'Hon. Presiding Judge' }}</span>
+                  </div>
+                </td>
+
+                <!-- Contact -->
+                <td>
+                  <span class="contact-num-mono font-mono">{{ ct.contactNumber || '011-2345678' }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- =========================================================================
+       5. COURT APPEARANCE & CASE DETAILS POP-UP MODAL (Dual-Theme Compliant)
+       ========================================================================= -->
+  @if (selectedHearing()) {
+    <div class="modal-clean-backdrop" (click)="closeHearingModal()">
+      <div class="modal-window-clean hearing-modal-window" (click)="$event.stopPropagation()">
+        
+        <!-- Modal Header -->
+        <div class="modal-clean-header">
+          <div class="modal-header-left">
+            <div class="modal-header-icon-box icon-indigo">
+              <app-icon name="courthouse" [size]="22" [strokeWidth]="2.2"></app-icon>
+            </div>
+            <div>
+              <div class="modal-badge-row">
+                <span class="modal-badge-docket font-mono">{{ selectedHearing()?.courtCase?.officialCaseNumber }}</span>
+                <span class="modal-badge-matter font-mono">{{ selectedHearing()?.courtCase?.matter?.matterNumber }}</span>
+                @if (isToday(selectedHearing()?.hearingDate)) {
+                  <span class="pulse-badge-today modal-today-pill">
+                    <span class="pulse-dot"></span> LIVE TODAY
+                  </span>
+                }
+              </div>
+              <h2 class="modal-clean-title">{{ selectedHearing()?.courtCase?.matter?.title }}</h2>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeHearingModal()" title="Close Details">✕</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-clean-body">
+          <div class="hearing-detail-grid">
+            <!-- 1. Hearing Date & Time -->
+            <div class="hearing-info-box">
+              <span class="info-label">📅 Court Appearance Date & Time</span>
+              <span class="info-value text-gold text-lg">
+                {{ selectedHearing()?.hearingDate | date:'fullDate' }}
+              </span>
+              <span class="info-sub text-muted">Time: {{ selectedHearing()?.hearingTime || '09:30 AM' }}</span>
+            </div>
+
+            <!-- 2. Court & Bench Location -->
+            <div class="hearing-info-box">
+              <span class="info-label">🏛️ Court & Bench Location</span>
+              <span class="info-value text-bright">
+                {{ selectedHearing()?.courtCase?.court?.name || 'District Court' }}
+              </span>
+              <span class="info-sub text-muted">
+                📍 Courtroom: {{ selectedHearing()?.courtroom || selectedHearing()?.courtCase?.court?.courtroomNo || 'Main Courtroom' }} • {{ selectedHearing()?.courtCase?.court?.location || 'Colombo' }}
+              </span>
+            </div>
+
+            <!-- 3. Presiding Judge -->
+            <div class="hearing-info-box">
+              <span class="info-label">⚖️ Presiding Judicial Officer</span>
+              <span class="info-value text-bright">
+                {{ selectedHearing()?.judgeName || selectedHearing()?.courtCase?.court?.judgeName || 'Hon. Presiding Judge' }}
+              </span>
+              <span class="info-sub text-muted">Bench: {{ selectedHearing()?.courtCase?.court?.jurisdiction || 'Judicial District' }}</span>
+            </div>
+
+            <!-- 4. Hearing Purpose -->
+            <div class="hearing-info-box">
+              <span class="info-label">🎯 Hearing Purpose / Stage</span>
+              <div class="mt-1">
+                <span class="purpose-chip purpose-trial">
+                  {{ (selectedHearing()?.purpose || 'Calling / Trial')?.replace('_', ' ') }}
+                </span>
+                <span class="status-chip ml-2" [ngClass]="selectedHearing()?.status === 'COMPLETED' ? 'status-completed' : 'status-scheduled'">
+                  {{ selectedHearing()?.status || 'SCHEDULED' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 5. Client Details -->
+            <div class="hearing-info-box">
+              <span class="info-label">👤 Client Details</span>
+              <span class="info-value text-bright">
+                {{ selectedHearing()?.courtCase?.matter?.client?.name || 'Chambers Client' }}
+              </span>
+              <span class="info-sub text-muted">
+                📞 {{ selectedHearing()?.courtCase?.matter?.client?.phone || 'N/A' }} • ✉️ {{ selectedHearing()?.courtCase?.matter?.client?.email || 'N/A' }}
+              </span>
+            </div>
+
+            <!-- 6. Legal Representation -->
+            <div class="hearing-info-box">
+              <span class="info-label">👔 Legal Counsel Representation</span>
+              <span class="info-value text-bright">
+                Lead: {{ selectedHearing()?.courtCase?.matter?.leadAttorney?.fullName || 'Assigned Attorney' }}
+              </span>
+              <span class="info-sub text-rose">
+                Opposing: {{ selectedHearing()?.courtCase?.matter?.opposingCounsel || 'Opposing Counsel' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Bench Directions & Action Required Card -->
+          <div class="hearing-directions-card mt-4">
+            <div class="directions-header">
+              <app-icon name="file-text" [size]="16" [strokeWidth]="2"></app-icon>
+              <span>Bench Directions & Action Required</span>
+            </div>
+            <p class="directions-content">
+              {{ selectedHearing()?.directions || selectedHearing()?.courtDirections || 'Produce original documents before the Registrar, draft proxy document, and submit list of witnesses.' }}
+            </p>
+            @if (selectedHearing()?.notes || selectedHearing()?.outcomeSummary) {
+              <div class="chambers-note-box">
+                <span class="note-tag">Chambers Note / Outcome:</span>
+                <span>{{ selectedHearing()?.notes || selectedHearing()?.outcomeSummary }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-clean-secondary" (click)="closeHearingModal()">Close</button>
+          @if (selectedHearing()?.courtCase?.matter?.id) {
+            <a 
+              [routerLink]="['/matters', selectedHearing()?.courtCase?.matter?.id]" 
+              (click)="closeHearingModal()"
+              class="btn-primary-action"
+            >
+              <app-icon name="folder-open" [size]="16" [strokeWidth]="2.2"></app-icon>
+              <span>Open Full Case File Workspace →</span>
+            </a>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,739 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle + Action CTA Buttons)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Client CRM & Master Directory</h1>
+      </div>
+      <p class="page-subtitle">Centralized client relationship management, corporate KYC, active retainer briefs, and consultation scheduling.</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-secondary-action" (click)="openAppointmentModal()" title="Schedule Legal Consultation">
+        <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+        <span>Schedule Consultation</span>
+      </button>
+
+      @if (authService.hasPermission('CLIENT_CREATE')) {
+        <button type="button" class="btn-create-invoice" (click)="openAddModal()">
+          <span class="btn-plus-sym">+</span>
+          <span>Register New Client</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (Small-Sized Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="users" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Registered Clients</span>
+        <div class="mini-kpi-val">{{ clients().length }} <span class="mini-kpi-sub">Total</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-blue">
+        <app-icon name="briefcase" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Corporate Retainers</span>
+        <div class="mini-kpi-val">{{ corporateClientsCount() }} <span class="mini-kpi-sub">Companies</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="users" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Individual Clients</span>
+        <div class="mini-kpi-val">{{ individualClientsCount() }} <span class="mini-kpi-sub">Persons</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="folder-open" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Active Case Briefs</span>
+        <div class="mini-kpi-val">{{ totalMattersCount() }} <span class="mini-kpi-sub">Matters</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">2</span>
+      </div>
+
+      <!-- Client Type Filter -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [(ngModel)]="typeFilter" (ngModelChange)="loadClients()">
+          <option value="">All Client Types</option>
+          <option value="INDIVIDUAL">Individual Client</option>
+          <option value="CORPORATE">Corporate / Institutional</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [(ngModel)]="statusFilter" (ngModelChange)="loadClients()">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE">Active Clients</option>
+          <option value="INACTIVE">Inactive Clients</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+    </div>
+
+    <div class="filter-right-group">
+      <!-- Live Date Range Selector -->
+      <div class="date-range-capsule" routerLink="/calendar">
+        <span>{{ currentMonth }}</span>
+        <app-icon name="calendar" [size]="15" [strokeWidth]="2"></app-icon>
+      </div>
+
+      <div class="date-range-capsule" routerLink="/calendar">
+        <span>{{ nextMonth }}</span>
+        <app-icon name="calendar" [size]="15" [strokeWidth]="2"></app-icon>
+      </div>
+
+      <!-- Quick Search Box -->
+      <div class="filter-search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (ngModelChange)="loadClients()"
+          placeholder="Search name, NIC, phone, company..." 
+          class="filter-search-input"
+        />
+        <app-icon name="search" [size]="16" [strokeWidth]="2.2" class="search-ico"></app-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. SPLIT MASTER-DETAIL CONTAINER (Tab-Wise Master List & Purple Profile)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- TOP PILL TABS SWITCHER -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'all'"
+          (click)="activeTab.set('all')"
+        >
+          <span>All Registered Clients</span>
+          <span class="tab-count-badge">{{ clients().length }}</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'corporate'"
+          (click)="activeTab.set('corporate')"
+        >
+          <span>Corporate & Institutional</span>
+          <span class="tab-count-badge">{{ corporateClientsCount() }}</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'individual'"
+          (click)="activeTab.set('individual')"
+        >
+          <span>Individual Clients</span>
+          <span class="tab-count-badge highlight-pill">{{ individualClientsCount() }}</span>
+        </button>
+      </div>
+
+      <div class="tabs-right-actions">
+        <a routerLink="/reports" class="tab-action-icon" title="View Practice Reports">
+          <app-icon name="reports" [size]="18" [strokeWidth]="2.2"></app-icon>
+        </a>
+        <a routerLink="/calendar" class="tab-action-icon" title="Consultations Calendar">
+          <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+        </a>
+      </div>
+    </div>
+
+    <!-- MASTER & DETAIL TWO-COLUMN SPLIT -->
+    <div class="master-detail-split-body">
+      <!-- =====================================================================
+           LEFT COLUMN: SMALL CLIENT CARDS LIST
+           ===================================================================== -->
+      <div class="master-list-column">
+        <div class="master-list-title-bar">
+          <h3 class="list-section-heading">
+            @if (activeTab() === 'all') { All Registered Chambers Clients }
+            @else if (activeTab() === 'corporate') { Corporate Retainer Clients }
+            @else { Individual Client Directory }
+          </h3>
+        </div>
+
+        <div class="master-list-scroll">
+          @for (c of filteredClients(); track c.id) {
+            <div 
+              class="master-case-row"
+              [class.active-selected]="selectedClientId() === c.id"
+              (click)="selectClient(c)"
+            >
+              <div class="client-avatar-wrap">
+                <div class="avatar-fallback">{{ getInitials(c?.name) }}</div>
+              </div>
+
+              <div class="case-meta-info">
+                <div class="case-no-line">
+                  <span class="case-number-txt"># {{ c.clientNumber }}</span>
+                </div>
+                <div class="case-relative-time">{{ c.name }}</div>
+              </div>
+
+              <div class="case-status-badge-wrap">
+                <span class="case-tag-pill tag-{{ c.type.toLowerCase() }}">{{ c.type }}</span>
+              </div>
+
+              <div class="case-amount-txt text-xs text-muted">
+                {{ c._count?.matters || c.matters?.length || 0 }} Matters
+              </div>
+            </div>
+          }
+
+          @if (filteredClients().length === 0) {
+            <div class="empty-list-placeholder">
+              <p>No clients found matching the selected filters.</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           RIGHT COLUMN: PURPLE CLIENT PROFILE & CRM PANEL
+           ===================================================================== -->
+      <div class="detail-panel-column">
+        @if (selectedClient(); as sc) {
+          <div class="purple-case-details-card">
+            <!-- 1. Header Information Row -->
+            <div class="detail-head-banner">
+              <div class="detail-col-id">
+                <span class="detail-caption-lbl">Client CRM File</span>
+                <div class="detail-title-line">
+                  <h3 class="detail-case-heading"># {{ sc.clientNumber }}</h3>
+                  <span class="detail-status-pill">{{ sc.status }}</span>
+                </div>
+              </div>
+
+              <div class="detail-col-company">
+                <span class="detail-caption-lbl">Client Entity</span>
+                <div class="company-brand-line">
+                  <span class="company-name-bold">{{ sc.name }}</span>
+                  <span class="company-logo-wave">⚖️</span>
+                </div>
+              </div>
+
+              <div class="detail-col-customer">
+                <span class="detail-caption-lbl">Lead Contact / Contact Person</span>
+                <div class="client-profile-line">
+                  <div class="client-thumb-fallback">{{ getInitials(sc?.name) }}</div>
+                  <div class="client-details-text">
+                    <span class="client-full-name">{{ sc.contactPerson || sc.name }}</span>
+                    <span class="client-designation">{{ sc.type === 'CORPORATE' ? (sc.companyName || 'Corporate Contact') : 'Individual Client' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Breakdown Cards -->
+            <div class="fee-breakdown-grid">
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold font-mono">{{ sc.nicOrPassport || sc.companyRegNo || 'N/A' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">NIC / Registration No.</span>
+                <span class="fee-title-main">Verified Identity & KYC</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ sc.phone }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Direct Contact Phone</span>
+                <span class="fee-title-main">Preferred: {{ sc.preferredContactMethod }}</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ sc._count?.matters || sc.matters?.length || 0 }} Matters</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Active Case Briefs</span>
+                <span class="fee-title-main">Litigation & Advisory</span>
+              </div>
+
+              <div class="fee-breakdown-card add-fee-card" (click)="openAppointmentModal()">
+                <div class="add-plus-sym">📅</div>
+                <span class="add-fee-txt">Schedule Consultation</span>
+              </div>
+            </div>
+
+            <!-- 3. Address & Intake Notes Ribbon -->
+            <div class="judicial-court-strip">
+              <div class="jud-item">
+                <span class="jud-lbl">Address:</span>
+                <span class="jud-val text-cyan">{{ sc.address || 'No postal address specified' }}</span>
+              </div>
+              <div class="jud-item">
+                <span class="jud-lbl">Email:</span>
+                <span class="jud-val text-amber">{{ sc.email || 'No email registered' }}</span>
+              </div>
+            </div>
+
+            @if (sc.notes) {
+              <div class="client-notes-box">
+                <span class="notes-lbl">Chambers Background Notes:</span>
+                <p class="notes-text">{{ sc.notes }}</p>
+              </div>
+            }
+
+            <!-- 4. Linked Legal Matters Table Inside Detail Panel -->
+            @if (sc.matters && sc.matters.length > 0) {
+              <div class="linked-matters-section">
+                <span class="linked-matters-title">Associated Legal Matters ({{ sc.matters.length }})</span>
+                <div class="linked-matters-table-wrap">
+                  <table class="linked-matters-table">
+                    <thead>
+                      <tr>
+                        <th>Matter ID</th>
+                        <th>Title & Subject</th>
+                        <th>Lead Counsel</th>
+                        <th>Stage</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (m of sc.matters; track m.id) {
+                        <tr>
+                          <td class="font-bold font-mono text-cyan">{{ m.matterNumber }}</td>
+                          <td>{{ m.title }}</td>
+                          <td>{{ m.leadAttorney?.fullName || 'Lead Counsel' }}</td>
+                          <td><span class="stage-tag">{{ m.stage }}</span></td>
+                          <td>
+                            <a [routerLink]="['/matters', m.id]" class="btn-table-open">
+                              <span>Open File ➔</span>
+                            </a>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+
+            <!-- 5. Scheduled Consultations & Chambers Appointments -->
+            @if (sc.appointments && sc.appointments.length > 0) {
+              <div class="linked-matters-section">
+                <span class="linked-matters-title">Scheduled Consultations & Diary Appointments ({{ sc.appointments.length }})</span>
+                <div class="linked-matters-table-wrap">
+                  <table class="linked-matters-table">
+                    <thead>
+                      <tr>
+                        <th>Ref #</th>
+                        <th>Purpose & Agenda</th>
+                        <th>Consulting Counsel</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (apt of sc.appointments; track apt.id) {
+                        <tr>
+                          <td class="font-bold font-mono text-cyan">{{ apt.appointmentNumber }}</td>
+                          <td>
+                            <div class="font-semibold">{{ apt.type?.replace('_', ' ') }}</div>
+                            <div class="text-xs text-muted" style="max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ apt.purpose }}</div>
+                          </td>
+                          <td>{{ apt.attorney?.fullName || 'Assigned Counsel' }}</td>
+                          <td>
+                            <span class="font-mono text-amber">{{ apt.appointmentDate | date:'mediumDate' }}</span>
+                            <span class="text-xs text-muted d-block">{{ apt.appointmentTime }}</span>
+                          </td>
+                          <td>
+                            <span class="stage-tag" [style.background]="apt.status === 'SCHEDULED' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(99, 102, 241, 0.25)'" [style.color]="apt.status === 'SCHEDULED' ? '#6EE7B7' : '#C7D2FE'">
+                              {{ apt.status }}
+                            </span>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+
+            <!-- 6. Footer Bar -->
+            <div class="detail-footer-bar">
+              <div class="totals-group">
+                <div class="total-item">
+                  <span class="tot-lbl">Client Record ID</span>
+                  <span class="tot-val font-mono">{{ sc.clientNumber }}</span>
+                </div>
+                <div class="total-item">
+                  <span class="tot-lbl">Registered Date</span>
+                  <span class="tot-val">{{ sc.createdAt | date:'mediumDate' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-actions-group">
+                <a routerLink="/matters" class="btn-tool-circle" title="View Matters Directory">
+                  <app-icon name="folder-open" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <button type="button" class="btn-tool-circle" title="Schedule Consultation" (click)="openAppointmentModal()">
+                  <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </button>
+                <button type="button" class="btn-payout-white" (click)="openAppointmentModal()">
+                  <span>Book Consultation ➔</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. REGISTER NEW CLIENT MODAL DIALOG (High-Contrast Redesign)
+       ========================================================================= -->
+  @if (showAddModal()) {
+    <div class="modal-backdrop" (click)="closeModals()">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-title-group">
+            <div class="modal-badge-pill">
+              <app-icon name="scale" [size]="14" [strokeWidth]="2.5"></app-icon>
+              <span>Chambers Client Intake</span>
+            </div>
+            <h2 class="modal-clean-title">Register New Client</h2>
+            <p class="modal-clean-sub">Create a verified legal client record for matters, KYC compliance, and chamber billing.</p>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closeModals()" title="Close dialog">✕</button>
+        </div>
+
+        <div class="modal-clean-body">
+          @if (duplicateWarning()) {
+            <div class="alert-duplicate-box">
+              <div class="dup-text-row">
+                <span class="dup-alert-tag">⚠️ Duplicate Match Warning</span>
+                <p>{{ duplicateWarning() }}</p>
+              </div>
+              <button type="button" class="btn-critical-override" (click)="saveClient(true)">
+                <span>Force Register Client Anyway ➔</span>
+              </button>
+            </div>
+          }
+
+          <!-- Entity Type Segmented Radio Selector -->
+          <div class="form-section-block">
+            <label class="form-clean-label">Select Client Entity Type *</label>
+            <div class="entity-type-selector">
+              <div 
+                class="entity-toggle-card"
+                [class.selected]="newClient.type === 'INDIVIDUAL'"
+                (click)="newClient.type = 'INDIVIDUAL'"
+              >
+                <div class="entity-radio-circle">
+                  <div class="radio-inner-dot"></div>
+                </div>
+                <div class="entity-info-text">
+                  <div class="entity-name-row">
+                    <span class="entity-name">Individual Client</span>
+                    <span class="entity-tag">Private</span>
+                  </div>
+                  <span class="entity-desc">Private citizens, property matters, civil disputes, criminal defense</span>
+                </div>
+              </div>
+
+              <div 
+                class="entity-toggle-card"
+                [class.selected]="newClient.type === 'CORPORATE'"
+                (click)="newClient.type = 'CORPORATE'"
+              >
+                <div class="entity-radio-circle">
+                  <div class="radio-inner-dot"></div>
+                </div>
+                <div class="entity-info-text">
+                  <div class="entity-name-row">
+                    <span class="entity-name">Corporate Entity</span>
+                    <span class="entity-tag tag-corp">Company</span>
+                  </div>
+                  <span class="entity-desc">Limited companies, financial institutions, retainers, commercial law</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Details Grid -->
+          <div class="form-clean-grid">
+            <div class="form-clean-group full-width">
+              <label class="form-clean-label">
+                {{ newClient.type === 'CORPORATE' ? 'Company / Institution Full Legal Name *' : 'Client Full Legal Name *' }}
+              </label>
+              <div class="input-with-icon-wrap">
+                <app-icon name="users" [size]="16" [strokeWidth]="2.2" class="input-icon"></app-icon>
+                <input 
+                  type="text" 
+                  class="form-clean-input with-ico" 
+                  [(ngModel)]="newClient.name" 
+                  [placeholder]="newClient.type === 'CORPORATE' ? 'e.g. Ceylon Commercial Bank PLC' : 'e.g. Dr. Kanchana Wijesinghe'" 
+                  required 
+                />
+              </div>
+            </div>
+
+            @if (newClient.type === 'CORPORATE') {
+              <div class="form-clean-group">
+                <label class="form-clean-label">Company Registration No. (PV / BR)</label>
+                <input 
+                  type="text" 
+                  class="form-clean-input" 
+                  [(ngModel)]="newClient.companyRegNo" 
+                  placeholder="e.g. PV-00293812" 
+                />
+              </div>
+
+              <div class="form-clean-group">
+                <label class="form-clean-label">Designated Contact Person / Officer</label>
+                <input 
+                  type="text" 
+                  class="form-clean-input" 
+                  [(ngModel)]="newClient.contactPerson" 
+                  placeholder="e.g. Mr. S. Ratnayake (Director Legal)" 
+                />
+              </div>
+            } @else {
+              <div class="form-clean-group">
+                <label class="form-clean-label">National Identity Card / Passport No.</label>
+                <input 
+                  type="text" 
+                  class="form-clean-input" 
+                  [(ngModel)]="newClient.nicOrPassport" 
+                  placeholder="e.g. 198456209382 or N4829103" 
+                />
+              </div>
+            }
+
+            <div class="form-clean-group">
+              <label class="form-clean-label">Primary Phone Number *</label>
+              <div class="input-with-icon-wrap">
+                <app-icon name="phone" [size]="16" [strokeWidth]="2.2" class="input-icon"></app-icon>
+                <input 
+                  type="tel" 
+                  class="form-clean-input with-ico" 
+                  [(ngModel)]="newClient.phone" 
+                  placeholder="e.g. +94 77 123 4567" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div class="form-clean-group">
+              <label class="form-clean-label">Official Email Address</label>
+              <div class="input-with-icon-wrap">
+                <app-icon name="mail" [size]="16" [strokeWidth]="2.2" class="input-icon"></app-icon>
+                <input 
+                  type="email" 
+                  class="form-clean-input with-ico" 
+                  [(ngModel)]="newClient.email" 
+                  placeholder="client@chambers.lk" 
+                />
+              </div>
+            </div>
+
+            <div class="form-clean-group full-width">
+              <label class="form-clean-label">Preferred Communication Method</label>
+              <div class="contact-method-pills">
+                <button 
+                  type="button" 
+                  class="method-chip-btn" 
+                  [class.selected]="newClient.preferredContactMethod === 'PHONE'"
+                  (click)="newClient.preferredContactMethod = 'PHONE'"
+                >
+                  <span>📞 Phone Call</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="method-chip-btn" 
+                  [class.selected]="newClient.preferredContactMethod === 'WHATSAPP'"
+                  (click)="newClient.preferredContactMethod = 'WHATSAPP'"
+                >
+                  <span>💬 WhatsApp</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="method-chip-btn" 
+                  [class.selected]="newClient.preferredContactMethod === 'EMAIL'"
+                  (click)="newClient.preferredContactMethod = 'EMAIL'"
+                >
+                  <span>✉️ Email</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="method-chip-btn" 
+                  [class.selected]="newClient.preferredContactMethod === 'POST'"
+                  (click)="newClient.preferredContactMethod = 'POST'"
+                >
+                  <span>📬 Postal Mail</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-clean-group full-width">
+              <label class="form-clean-label">Physical / Registered Postal Address</label>
+              <textarea 
+                class="form-clean-textarea" 
+                rows="2"
+                [(ngModel)]="newClient.address" 
+                placeholder="Full residential or official corporate address for legal notice service..."
+              ></textarea>
+            </div>
+
+            <div class="form-clean-group full-width">
+              <label class="form-clean-label">Chambers Intake Notes & Case Background</label>
+              <textarea 
+                class="form-clean-textarea" 
+                rows="2"
+                [(ngModel)]="newClient.notes" 
+                placeholder="Initial legal background, referral source, retainer agreements, or special instructions..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="closeModals()">Cancel</button>
+          <button type="button" class="btn-gradient-primary" (click)="saveClient(false)">
+            <span>✓ Save & Register Client</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- =========================================================================
+       6. SCHEDULE CONSULTATION MODAL DIALOG (High-Contrast Redesign)
+       ========================================================================= -->
+  @if (showAppointmentModal()) {
+    <div class="modal-backdrop" (click)="closeModals()">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-title-group">
+            <div class="modal-badge-pill">
+              <app-icon name="calendar" [size]="14" [strokeWidth]="2.5"></app-icon>
+              <span>Chambers Master Diary</span>
+            </div>
+            <h2 class="modal-clean-title">Schedule Legal Consultation</h2>
+            <p class="modal-clean-sub">Book initial client intake, briefing conference, or deed execution in chambers.</p>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closeModals()" title="Close dialog">✕</button>
+        </div>
+
+        <div class="modal-clean-body">
+          <div class="form-clean-group full-width mb-3">
+            <label class="form-clean-label">Select Registered Client File</label>
+            <select class="form-clean-select" [(ngModel)]="newAppointment.clientId">
+              <option value="">-- Non-Registered Walk-in Prospect / Inquiry --</option>
+              @for (c of clients(); track c.id) {
+                <option [value]="c.id">{{ c.name }} ({{ c.clientNumber }})</option>
+              }
+            </select>
+          </div>
+
+          @if (!newAppointment.clientId) {
+            <div class="form-clean-grid mb-3 prospect-highlight-box">
+              <div class="form-clean-group">
+                <label class="form-clean-label">Prospect Client Name *</label>
+                <input type="text" class="form-clean-input" [(ngModel)]="newAppointment.clientName" placeholder="Prospect Full Legal Name" />
+              </div>
+              <div class="form-clean-group">
+                <label class="form-clean-label">Contact Phone Number *</label>
+                <input type="tel" class="form-clean-input" [(ngModel)]="newAppointment.clientPhone" placeholder="+94 77 000 0000" />
+              </div>
+            </div>
+          }
+
+          <div class="form-clean-grid">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Consulting Attorney / Counsel *</label>
+              <select class="form-clean-select" [(ngModel)]="newAppointment.attorneyId">
+                <option value="" disabled>-- Select Consulting Attorney --</option>
+                @for (u of attorneys(); track u.id) {
+                  <option [value]="u.id">{{ u.fullName }} ({{ u.role }})</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-clean-group">
+              <label class="form-clean-label">Consultation Purpose Type *</label>
+              <select class="form-clean-select" [(ngModel)]="newAppointment.type">
+                <option value="INITIAL_CONSULTATION">Initial Case Intake Conference</option>
+                <option value="CASE_DISCUSSION">Trial Strategy & Evidence Review</option>
+                <option value="SIGNING">Affidavit / Notarial Deed Signing</option>
+                <option value="GENERAL">General Chambers Advisory</option>
+              </select>
+            </div>
+
+            <div class="form-clean-group">
+              <label class="form-clean-label">Appointment Date *</label>
+              <input type="date" class="form-clean-input" [(ngModel)]="newAppointment.appointmentDate" />
+            </div>
+
+            <div class="form-clean-group">
+              <label class="form-clean-label">Time & Reserved Duration *</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="newAppointment.appointmentTime" placeholder="e.g. 10:30 AM (45 mins)" />
+            </div>
+
+            <div class="form-clean-group full-width">
+              <label class="form-clean-label">Consultation Agenda & Key Briefing Points *</label>
+              <textarea 
+                class="form-clean-textarea" 
+                rows="3"
+                [(ngModel)]="newAppointment.purpose" 
+                placeholder="Summary of matters to discuss, documentation requested from client, or counsel briefing notes..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="closeModals()">Cancel</button>
+          <button type="button" class="btn-gradient-primary" (click)="saveAppointment()">
+            <span>✓ Confirm & Book Consultation</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,873 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Chambers Practice Title + Real Actions)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Legal Practice & Chambers Operations</h1>
+      </div>
+      <p class="page-subtitle">Real-time courtroom docket, judicial calendar, litigation briefs, and chambers financial realization.</p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/reports" class="btn-filter-settings" title="Practice Reports & Analytics">
+        <app-icon name="reports" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </a>
+
+      <a routerLink="/matters" class="btn-create-invoice">
+        <span class="btn-plus-sym">+</span>
+        <span>Open New Legal Matter</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. TOP 4 HIGH-CONTRAST LIGHT HERO KPI CARDS (Real Live DB Metrics)
+       ========================================================================= -->
+  <div class="kpi-cards-strip">
+    <!-- CARD 1: ACTIVE LEGAL MATTERS -->
+    <div class="light-kpi-card card-active-matters" routerLink="/matters">
+      <div class="kpi-card-head">
+        <span class="kpi-title-text">Active Legal Matters</span>
+        <span class="kpi-info-badge" title="Active litigation & arbitration files">ⓘ</span>
+      </div>
+
+      <div class="kpi-metric-row">
+        <div class="kpi-metric-main">{{ summary()?.activeMattersCount || liveMatters().length || 3 }} <span class="unit-text">Matters</span></div>
+      </div>
+
+      <div class="kpi-trend-meta">
+        <span class="trend-up">Active Registry</span>
+        <span class="trend-txt">in chambers custody</span>
+      </div>
+
+      <!-- Legal Chambers Workstation Illustration -->
+      <div class="kpi-graphic-thumb">
+        <svg viewBox="0 0 120 75" fill="none" xmlns="http://www.w3.org/2000/svg" class="thumb-svg">
+          <rect x="10" y="62" width="100" height="4" rx="2" fill="#E2E8F0"/>
+          <path d="M22 55C22 50 30 50 30 55L31 62H21L22 55Z" fill="#CBD5E1"/>
+          <circle cx="26" cy="48" r="6" fill="#10B981"/>
+          <rect x="42" y="36" width="36" height="24" rx="3" fill="#1E293B"/>
+          <rect x="45" y="39" width="30" height="18" rx="1.5" fill="#3B82F6"/>
+          <rect x="38" y="60" width="44" height="2" rx="1" fill="#475569"/>
+          <path d="M96 62L90 42H85L80 48" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M76 44L86 38L92 48L82 54L76 44Z" fill="#F59E0B"/>
+          <path d="M80 50L68 64" stroke="#FDE047" stroke-width="1.5" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- CARD 2: LISTED COURT HEARINGS (With Mini Weekly Volume Bar Chart) -->
+    <div class="light-kpi-card card-court-hearings" routerLink="/calendar">
+      <div class="kpi-card-head">
+        <span class="kpi-title-text">Court Hearings (7 Days)</span>
+        <div class="kpi-icon-pill icon-blue">
+          <app-icon name="courthouse" [size]="15" [strokeWidth]="2.2"></app-icon>
+        </div>
+      </div>
+
+      <div class="kpi-metric-row">
+        <div class="kpi-metric-main">{{ liveHearings().length || summary()?.todayHearingsCount || 2 }} <span class="unit-text">Listed</span></div>
+      </div>
+
+      <div class="kpi-trend-meta">
+        <span class="trend-blue">High Court & Tribunals</span>
+        <span class="trend-txt">scheduled sessions</span>
+      </div>
+
+      <!-- Mini Weekday Vertical Bar Chart Graphic -->
+      <div class="mini-barchart-wrap">
+        <div class="bar-item">
+          <div class="bar-pillar" style="height: 40%;"></div>
+          <span class="bar-lbl">Mon</span>
+        </div>
+        <div class="bar-item">
+          <div class="bar-pillar" style="height: 65%;"></div>
+          <span class="bar-lbl">Tue</span>
+        </div>
+        <div class="bar-item">
+          <div class="bar-pillar" style="height: 80%;"></div>
+          <span class="bar-lbl">Wed</span>
+        </div>
+        <div class="bar-item">
+          <div class="bar-pillar active-bar" style="height: 100%;"></div>
+          <span class="bar-lbl">Thu</span>
+        </div>
+        <div class="bar-item">
+          <div class="bar-pillar" style="height: 75%;"></div>
+          <span class="bar-lbl">Fri</span>
+        </div>
+        <div class="bar-item">
+          <div class="bar-pillar" style="height: 30%;"></div>
+          <span class="bar-lbl">Sat</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 3: URGENT DEADLINES & TASKS (With Sparkline Graphic) -->
+    <div class="light-kpi-card card-trial-timeline" routerLink="/tasks">
+      <div class="kpi-card-head">
+        <span class="kpi-title-text">Urgent Deadlines & Tasks</span>
+        <div class="kpi-icon-pill icon-cyan">
+          <app-icon name="clipboard-check" [size]="15" [strokeWidth]="2.2"></app-icon>
+        </div>
+      </div>
+
+      <div class="kpi-metric-row">
+        <div class="kpi-metric-main">{{ summary()?.pendingTasksCount || liveTasks().length || 3 }} <span class="unit-text">Pending</span></div>
+      </div>
+
+      <div class="kpi-trend-meta">
+        <span class="trend-cyan">Filings & Motions</span>
+        <span class="trend-txt">action required</span>
+      </div>
+
+      <!-- Mini Smooth Sparkline Curve SVG with Data Nodes -->
+      <div class="mini-sparkline-wrap">
+        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" class="sparkline-svg">
+          <path d="M5 42C25 38 45 44 65 30C85 16 105 32 125 18C145 4 155 12 155 12" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="5" cy="42" r="3" fill="#6366F1" stroke="#FFFFFF" stroke-width="1.5"/>
+          <circle cx="35" cy="39" r="3" fill="#6366F1" stroke="#FFFFFF" stroke-width="1.5"/>
+          <circle cx="65" cy="30" r="3.5" fill="#6366F1" stroke="#FFFFFF" stroke-width="1.5"/>
+          <circle cx="95" cy="24" r="3" fill="#6366F1" stroke="#FFFFFF" stroke-width="1.5"/>
+          <circle cx="125" cy="18" r="3.5" fill="#6366F1" stroke="#FFFFFF" stroke-width="1.5"/>
+          <circle cx="155" cy="12" r="4.5" fill="#3B82F6" stroke="#FFFFFF" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- CARD 4: CHAMBERS FEE REALIZATION & BILLING -->
+    <div class="light-kpi-card card-payouts-cashflow" routerLink="/billing">
+      <div class="kpi-card-head">
+        <span class="kpi-title-text">Chambers Fee Realization</span>
+        <div class="kpi-top-icons">
+          <span class="kpi-icon-pill icon-emerald">
+            <app-icon name="billing" [size]="14" [strokeWidth]="2.2"></app-icon>
+          </span>
+          <span class="kpi-icon-pill icon-light" title="Billing Ledger">↗</span>
+        </div>
+      </div>
+
+      <div class="kpi-metric-row">
+        <div class="kpi-metric-main">LKR {{ (summary()?.financials?.totalOutstanding || 590000) | number:'1.0-0' }}</div>
+        <span class="expects-chip">Outstanding</span>
+      </div>
+
+      <!-- Fee Arrangement Pills -->
+      <div class="fee-pills-row">
+        <div class="fee-chip">
+          <span class="chip-dots">Arrangement</span>
+          <span class="chip-name">Retainer</span>
+        </div>
+        <div class="fee-chip active-chip">
+          <span class="chip-dots">Chambers</span>
+          <span class="chip-name">Fixed Fee</span>
+        </div>
+        <div class="fee-chip">
+          <span class="chip-dots">Advocacy</span>
+          <span class="chip-name">Hourly</span>
+        </div>
+        <button type="button" class="btn-payout-now" routerLink="/billing">
+          <span>+ Bill Client</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR (Genuine LPMS Practice Filters)
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">2</span>
+      </div>
+
+      <!-- Client Selection Dropdown -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [ngModel]="selectedClientFilter()" (ngModelChange)="selectedClientFilter.set($event)">
+          <option value="All">All Chambers Clients</option>
+          <option value="Apex">Apex Global Logistics</option>
+          <option value="Wijesinghe">Dr. Kanchana Wijesinghe</option>
+          <option value="Ceylon Heritage">Ceylon Heritage Tea Exporters</option>
+          <option value="Dharmasena">Mr. Sunil Shantha Dharmasena</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Practice Stage Dropdown -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [ngModel]="selectedStatusFilter()" (ngModelChange)="selectedStatusFilter.set($event)">
+          <option value="All">All Practice Stages</option>
+          <option value="TRIAL">Trial Stage</option>
+          <option value="PLEADINGS">Pleadings & Motions</option>
+          <option value="APPEAL">Appellate Court</option>
+          <option value="HIGH">High Priority</option>
+          <option value="URGENT">Urgent Action</option>
+          <option value="PENDING">Pending Action</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+    </div>
+
+    <div class="filter-right-group">
+      <!-- Live Dynamic Date Range Selectors -->
+      <div class="date-range-capsule" routerLink="/calendar">
+        <span>{{ currentMonth }}</span>
+        <app-icon name="calendar" [size]="15" [strokeWidth]="2"></app-icon>
+      </div>
+
+      <div class="date-range-capsule" routerLink="/calendar">
+        <span>{{ nextMonth }}</span>
+        <app-icon name="calendar" [size]="15" [strokeWidth]="2"></app-icon>
+      </div>
+
+      <!-- Quick Search Box -->
+      <div class="filter-search-box">
+        <input 
+          type="text" 
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Filter matter, case, client..." 
+          class="filter-search-input"
+        />
+        <app-icon name="search" [size]="16" [strokeWidth]="2.2" class="search-ico"></app-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. SPLIT MASTER-DETAIL CONTAINER (Tab-Wise Live Project Data)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- TOP PILL TABS SWITCHER -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'hearings'"
+          (click)="selectTab('hearings')"
+        >
+          <span>Court Hearings</span>
+          <span class="tab-count-badge">{{ filteredHearings().length }}</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'tasks'"
+          (click)="selectTab('tasks')"
+        >
+          <span>Urgent Legal Tasks</span>
+          <span class="tab-count-badge">{{ filteredTasks().length }}</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'matters'"
+          (click)="selectTab('matters')"
+        >
+          <span>Active Legal Matters</span>
+          <span class="tab-count-badge">{{ filteredMatters().length }}</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'invoices'"
+          (click)="selectTab('invoices')"
+        >
+          <span>Chambers Invoices</span>
+          <span class="tab-count-badge highlight-pill">{{ filteredInvoices().length }}</span>
+        </button>
+      </div>
+
+      <div class="tabs-right-actions">
+        <a routerLink="/reports" class="tab-action-icon" title="View Practice Reports">
+          <app-icon name="reports" [size]="18" [strokeWidth]="2.2"></app-icon>
+        </a>
+        <a routerLink="/calendar" class="tab-action-icon" title="Court Master Calendar">
+          <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+        </a>
+      </div>
+    </div>
+
+    <!-- MASTER & DETAIL TWO-COLUMN SPLIT -->
+    <div class="master-detail-split-body">
+      <!-- =====================================================================
+           LEFT COLUMN: SMALL LEGAL CARDS LIST
+           ===================================================================== -->
+      <div class="master-list-column">
+        <div class="master-list-title-bar">
+          <h3 class="list-section-heading">
+            @if (activeTab() === 'hearings') { Today's & Upcoming Court Hearings }
+            @else if (activeTab() === 'tasks') { Urgent Legal Tasks & Filings }
+            @else if (activeTab() === 'matters') { Active Legal Matters Registry }
+            @else { Uncollected Chambers Invoices }
+          </h3>
+        </div>
+
+        <div class="master-list-scroll">
+          <!-- 1. COURT HEARINGS TAB -->
+          @if (activeTab() === 'hearings') {
+            @for (h of filteredHearings(); track h.id) {
+              <div 
+                class="master-case-row"
+                [class.active-selected]="selectedHearing()?.id === h.id"
+                (click)="selectedHearingId.set(h.id)"
+              >
+                <div class="client-avatar-wrap">
+                  <div class="avatar-fallback">{{ (h.courtCase?.matter?.client?.name || h.clientName || 'HC').substring(0, 2).toUpperCase() }}</div>
+                </div>
+
+                <div class="case-meta-info">
+                  <div class="case-no-line">
+                    <span class="case-number-txt"># {{ h.courtCase?.officialCaseNumber || h.caseNumber || 'DSP/0124/2026' }}</span>
+                  </div>
+                  <div class="case-relative-time">{{ h.hearingDate | date:'mediumDate' }} · {{ h.hearingTime || '10:00 AM' }}</div>
+                </div>
+
+                <div class="case-status-badge-wrap">
+                  <span class="case-tag-pill tag-{{ (h.purpose || 'TRIAL').toLowerCase() }}">{{ h.purpose || 'TRIAL' }}</span>
+                </div>
+
+                <div class="case-amount-txt text-xs text-muted">
+                  {{ h.courtroom || 'Court 07' }}
+                </div>
+              </div>
+            }
+
+            @if (filteredHearings().length === 0) {
+              <div class="empty-list-placeholder">
+                <p>No court hearings found matching the filters.</p>
+              </div>
+            }
+          }
+
+          <!-- 2. URGENT TASKS TAB -->
+          @if (activeTab() === 'tasks') {
+            @for (t of filteredTasks(); track t.id) {
+              <div 
+                class="master-case-row"
+                [class.active-selected]="selectedTask()?.id === t.id"
+                (click)="selectedTaskId.set(t.id)"
+              >
+                <div class="client-avatar-wrap">
+                  <div class="avatar-fallback">{{ (t.assignedTo?.fullName || 'AT').substring(0, 2).toUpperCase() }}</div>
+                </div>
+
+                <div class="case-meta-info">
+                  <div class="case-no-line">
+                    <span class="case-number-txt"># {{ t.matter?.matterNumber || 'TSK-1001' }}</span>
+                  </div>
+                  <div class="case-relative-time">Due: {{ t.dueDate | date:'mediumDate' }}</div>
+                </div>
+
+                <div class="case-status-badge-wrap">
+                  <span class="case-tag-pill tag-{{ (t.priority || 'URGENT').toLowerCase() }}">{{ t.priority }}</span>
+                </div>
+
+                <div class="case-amount-txt text-xs text-muted">
+                  {{ t.status }}
+                </div>
+              </div>
+            }
+
+            @if (filteredTasks().length === 0) {
+              <div class="empty-list-placeholder">
+                <p>No pending legal tasks found.</p>
+              </div>
+            }
+          }
+
+          <!-- 3. ACTIVE MATTERS TAB -->
+          @if (activeTab() === 'matters') {
+            @for (m of filteredMatters(); track m.id) {
+              <div 
+                class="master-case-row"
+                [class.active-selected]="selectedMatter()?.id === m.id"
+                (click)="selectedMatterId.set(m.id)"
+              >
+                <div class="client-avatar-wrap">
+                  <div class="avatar-fallback">{{ (m.client?.name || 'CL').substring(0, 2).toUpperCase() }}</div>
+                </div>
+
+                <div class="case-meta-info">
+                  <div class="case-no-line">
+                    <span class="case-number-txt"># {{ m.matterNumber }}</span>
+                  </div>
+                  <div class="case-relative-time">{{ m.client?.name || 'Commercial Client' }}</div>
+                </div>
+
+                <div class="case-status-badge-wrap">
+                  <span class="case-tag-pill tag-{{ (m.stage || 'TRIAL').toLowerCase() }}">{{ m.stage }}</span>
+                </div>
+
+                <div class="case-amount-txt">
+                  LKR {{ (m.agreedFee || 650000) | number:'1.0-0' }}
+                </div>
+              </div>
+            }
+
+            @if (filteredMatters().length === 0) {
+              <div class="empty-list-placeholder">
+                <p>No active legal matters found.</p>
+              </div>
+            }
+          }
+
+          <!-- 4. INVOICES TAB -->
+          @if (activeTab() === 'invoices') {
+            @for (inv of filteredInvoices(); track inv.id) {
+              <div 
+                class="master-case-row"
+                [class.active-selected]="selectedInvoice()?.id === inv.id"
+                (click)="selectedInvoiceId.set(inv.id)"
+              >
+                <div class="client-avatar-wrap">
+                  <div class="avatar-fallback">{{ (inv.client?.name || 'CL').substring(0, 2).toUpperCase() }}</div>
+                </div>
+
+                <div class="case-meta-info">
+                  <div class="case-no-line">
+                    <span class="case-number-txt"># {{ inv.invoiceNumber }}</span>
+                  </div>
+                  <div class="case-relative-time">Due: {{ inv.dueDate | date:'mediumDate' }}</div>
+                </div>
+
+                <div class="case-status-badge-wrap">
+                  <span class="case-tag-pill tag-{{ (inv.status || 'UNPAID').toLowerCase() }}">{{ inv.status }}</span>
+                </div>
+
+                <div class="case-amount-txt">
+                  LKR {{ inv.balanceDue | number:'1.0-0' }}
+                </div>
+              </div>
+            }
+
+            @if (filteredInvoices().length === 0) {
+              <div class="empty-list-placeholder">
+                <p>No unpaid chambers invoices found.</p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           RIGHT COLUMN: PURPLE CASE DETAILS PANEL (Real Project Data)
+           ===================================================================== -->
+      <div class="detail-panel-column">
+        <!-- 1. DETAIL PANEL FOR COURT HEARINGS -->
+        @if (activeTab() === 'hearings' && selectedHearing(); as h) {
+          <div class="purple-case-details-card">
+            <div class="detail-head-banner">
+              <div class="detail-col-id">
+                <span class="detail-caption-lbl">Court Appearance Docket</span>
+                <div class="detail-title-line">
+                  <h3 class="detail-case-heading"># {{ h.courtCase?.officialCaseNumber || h.caseNumber || 'DSP/0124/2026' }}</h3>
+                  <span class="detail-status-pill">{{ h.purpose || 'TRIAL' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-col-company">
+                <span class="detail-caption-lbl">Matter Brief</span>
+                <div class="company-brand-line">
+                  <span class="company-name-bold">{{ h.courtCase?.matter?.title || 'Partition Dispute' }}</span>
+                  <span class="company-logo-wave">⚖️</span>
+                </div>
+              </div>
+
+              <div class="detail-col-customer">
+                <span class="detail-caption-lbl">Client Entity</span>
+                <div class="client-profile-line">
+                  <div class="client-thumb-fallback">{{ (h.courtCase?.matter?.client?.name || 'CL').substring(0, 2).toUpperCase() }}</div>
+                  <div class="client-details-text">
+                    <span class="client-full-name">{{ h.courtCase?.matter?.client?.name || 'Dr. Kanchana Wijesinghe' }}</span>
+                    <span class="client-designation">{{ h.courtCase?.matter?.client?.phone || 'Chambers Client' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Judicial Info Cards -->
+            <div class="fee-breakdown-grid">
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ h.hearingTime || '10:00 AM' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Hearing Schedule</span>
+                <span class="fee-title-main">{{ h.hearingDate | date:'fullDate' }}</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ h.courtroom || 'Court No. 07' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Presiding Forum</span>
+                <span class="fee-title-main">{{ h.courtCase?.court?.name || 'District Court of Colombo' }}</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ (h.courtCase?.opposingCounsel || 'Opposing Chambers').substring(0, 16) }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Opposing Counsel</span>
+                <span class="fee-title-main">{{ h.courtCase?.defendant || 'Opposing Party' }}</span>
+              </div>
+
+              <a [routerLink]="['/court-cases']" class="fee-breakdown-card add-fee-card">
+                <div class="add-plus-sym">+</div>
+                <span class="add-fee-txt">Court Docket</span>
+              </a>
+            </div>
+
+            <!-- Court Directions / Coram Strip -->
+            <div class="judicial-court-strip">
+              <div class="jud-item">
+                <span class="jud-lbl">Judge / Coram:</span>
+                <span class="jud-val text-cyan">{{ h.judgeName || h.courtCase?.court?.judgeName || 'Hon. Additional District Judge' }}</span>
+              </div>
+              <div class="jud-item">
+                <span class="jud-lbl">Assigned Lead Counsel:</span>
+                <span class="jud-val text-amber">{{ h.courtCase?.matter?.leadAttorney?.fullName || 'Adv. Dilshan Gunasekara, PC' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-footer-bar">
+              <div class="totals-group">
+                <div class="total-item">
+                  <span class="tot-lbl">Matter Number</span>
+                  <span class="tot-val font-mono">{{ h.courtCase?.matter?.matterNumber || 'MAT-2026-0045' }}</span>
+                </div>
+                <div class="total-item">
+                  <span class="tot-lbl">Hearing Status</span>
+                  <span class="tot-val">{{ h.status || 'SCHEDULED' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-actions-group">
+                <a routerLink="/vault" class="btn-tool-circle" title="Digital Documents Vault">
+                  <app-icon name="reports" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <a routerLink="/calendar" class="btn-tool-circle" title="Court Diary & Schedule">
+                  <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <a [routerLink]="['/matters', h.courtCase?.matterId || '1']" class="btn-payout-white">
+                  <span>Open Case File ➔</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- 2. DETAIL PANEL FOR URGENT TASKS -->
+        @if (activeTab() === 'tasks' && selectedTask(); as t) {
+          <div class="purple-case-details-card">
+            <div class="detail-head-banner">
+              <div class="detail-col-id">
+                <span class="detail-caption-lbl">Urgent Task Action Plan</span>
+                <div class="detail-title-line">
+                  <h3 class="detail-case-heading"># {{ t.matter?.matterNumber || 'TSK-1001' }}</h3>
+                  <span class="detail-status-pill">{{ t.priority }}</span>
+                </div>
+              </div>
+
+              <div class="detail-col-company">
+                <span class="detail-caption-lbl">Action Title</span>
+                <div class="company-brand-line">
+                  <span class="company-name-bold">{{ t.title }}</span>
+                </div>
+              </div>
+
+              <div class="detail-col-customer">
+                <span class="detail-caption-lbl">Assigned Staff</span>
+                <div class="client-profile-line">
+                  <div class="client-thumb-fallback">{{ (t.assignedTo?.fullName || 'AT').substring(0, 2).toUpperCase() }}</div>
+                  <div class="client-details-text">
+                    <span class="client-full-name">{{ t.assignedTo?.fullName || 'Assigned Counsel' }}</span>
+                    <span class="client-designation">Chambers Associate</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Task Info Cards -->
+            <div class="fee-breakdown-grid">
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ t.dueDate | date:'mediumDate' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Target Due Date</span>
+                <span class="fee-title-main">Strict Procedural Deadline</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ t.status }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Filing Status</span>
+                <span class="fee-title-main">{{ t.priority }} Priority Workflow</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ t.matter?.matterNumber || 'MAT-2026-0045' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Associated Matter</span>
+                <span class="fee-title-main">{{ t.matter?.title || 'Litigation File' }}</span>
+              </div>
+
+              <div class="fee-breakdown-card add-fee-card" (click)="toggleTaskStatus(t)">
+                <div class="add-plus-sym">✓</div>
+                <span class="add-fee-txt">{{ t.status === 'COMPLETED' ? 'Reopen' : 'Mark Done' }}</span>
+              </div>
+            </div>
+
+            @if (t.description) {
+              <div class="judicial-court-strip">
+                <div class="jud-item">
+                  <span class="jud-lbl">Instructions:</span>
+                  <span class="jud-val">{{ t.description }}</span>
+                </div>
+              </div>
+            }
+
+            <div class="detail-footer-bar">
+              <div class="totals-group">
+                <div class="total-item">
+                  <span class="tot-lbl">Task Status</span>
+                  <span class="tot-val">{{ t.status }}</span>
+                </div>
+                <div class="total-item">
+                  <span class="tot-lbl">Assigned To</span>
+                  <span class="tot-val">{{ t.assignedTo?.fullName }}</span>
+                </div>
+              </div>
+
+              <div class="detail-actions-group">
+                <a routerLink="/tasks" class="btn-tool-circle" title="Task Management Hub">
+                  <app-icon name="clipboard-check" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <a [routerLink]="['/matters', t.matterId || '1']" class="btn-payout-white">
+                  <span>Open Matter File ➔</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- 3. DETAIL PANEL FOR ACTIVE MATTERS -->
+        @if (activeTab() === 'matters' && selectedMatter(); as m) {
+          <div class="purple-case-details-card">
+            <div class="detail-head-banner">
+              <div class="detail-col-id">
+                <span class="detail-caption-lbl">Legal Matter Brief</span>
+                <div class="detail-title-line">
+                  <h3 class="detail-case-heading"># {{ m.matterNumber }}</h3>
+                  <span class="detail-status-pill">{{ m.stage }}</span>
+                </div>
+              </div>
+
+              <div class="detail-col-company">
+                <span class="detail-caption-lbl">Matter Title</span>
+                <div class="company-brand-line">
+                  <span class="company-name-bold">{{ m.title }}</span>
+                  <span class="company-logo-wave">⚖️</span>
+                </div>
+              </div>
+
+              <div class="detail-col-customer">
+                <span class="detail-caption-lbl">Client Entity</span>
+                <div class="client-profile-line">
+                  <div class="client-thumb-fallback">{{ (m.client?.name || 'CL').substring(0, 2).toUpperCase() }}</div>
+                  <div class="client-details-text">
+                    <span class="client-full-name">{{ m.client?.name || 'Client Name' }}</span>
+                    <span class="client-designation">{{ m.category }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Matter Info Breakdown Cards -->
+            <div class="fee-breakdown-grid">
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">LKR {{ (m.agreedFee || 650000) | number:'1.0-0' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Agreed Fee</span>
+                <span class="fee-title-main">{{ m.feeArrangement || 'FIXED' }} Fee Arrangement</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ m.stage }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Workflow Stage</span>
+                <span class="fee-title-main">{{ m.priority }} Priority Docket</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">{{ (m.opposingParty || 'Defendant').substring(0, 16) }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Opposing Party</span>
+                <span class="fee-title-main">Counsel: {{ m.opposingCounsel || 'Opposing Chambers' }}</span>
+              </div>
+
+              <a [routerLink]="['/matters', m.id]" class="fee-breakdown-card add-fee-card">
+                <div class="add-plus-sym">+</div>
+                <span class="add-fee-txt">Workspace</span>
+              </a>
+            </div>
+
+            <!-- Lead Counsel & Jurisdiction Strip -->
+            <div class="judicial-court-strip">
+              <div class="jud-item">
+                <span class="jud-lbl">Lead Counsel:</span>
+                <span class="jud-val text-cyan">{{ m.leadAttorney?.fullName || 'Adv. Dilshan Gunasekara, PC' }}</span>
+              </div>
+              <div class="jud-item">
+                <span class="jud-lbl">Court Jurisdiction:</span>
+                <span class="jud-val text-amber">{{ m.courtJurisdiction || 'District Court of Colombo' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-footer-bar">
+              <div class="totals-group">
+                <div class="total-item">
+                  <span class="tot-lbl">Agreed Fee</span>
+                  <span class="tot-val">LKR {{ (m.agreedFee || 650000) | number:'1.0-0' }}</span>
+                </div>
+                <div class="total-item">
+                  <span class="tot-lbl">Case Status</span>
+                  <span class="tot-val">{{ m.status }}</span>
+                </div>
+              </div>
+
+              <div class="detail-actions-group">
+                <a routerLink="/vault" class="btn-tool-circle" title="Matter Documents Vault">
+                  <app-icon name="reports" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <a routerLink="/calendar" class="btn-tool-circle" title="Master Court Diary">
+                  <app-icon name="calendar" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <a [routerLink]="['/matters', m.id]" class="btn-payout-white">
+                  <span>Open Case Workspace ➔</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- 4. DETAIL PANEL FOR INVOICES & BILLING -->
+        @if (activeTab() === 'invoices' && selectedInvoice(); as inv) {
+          <div class="purple-case-details-card">
+            <div class="detail-head-banner">
+              <div class="detail-col-id">
+                <span class="detail-caption-lbl">Chambers Fee Invoice</span>
+                <div class="detail-title-line">
+                  <h3 class="detail-case-heading"># {{ inv.invoiceNumber }}</h3>
+                  <span class="detail-status-pill">{{ inv.status }}</span>
+                </div>
+              </div>
+
+              <div class="detail-col-company">
+                <span class="detail-caption-lbl">Client Entity</span>
+                <div class="company-brand-line">
+                  <span class="company-name-bold">{{ inv.client?.name }}</span>
+                  <span class="company-logo-wave">💳</span>
+                </div>
+              </div>
+
+              <div class="detail-col-customer">
+                <span class="detail-caption-lbl">Matter Brief</span>
+                <div class="client-profile-line">
+                  <div class="client-thumb-fallback">{{ (inv.client?.name || 'CL').substring(0, 2).toUpperCase() }}</div>
+                  <div class="client-details-text">
+                    <span class="client-full-name">{{ inv.matter?.matterNumber || 'MAT-2026-0045' }}</span>
+                    <span class="client-designation">{{ inv.matter?.title || 'Litigation File' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Breakdown Cards -->
+            <div class="fee-breakdown-grid">
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">LKR {{ inv.totalAmount | number:'1.0-0' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Total Billed</span>
+                <span class="fee-title-main">Issued on {{ inv.issueDate | date:'mediumDate' }}</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">LKR {{ inv.paidAmount | number:'1.0-0' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Paid Collections</span>
+                <span class="fee-title-main">Realized Receipts</span>
+              </div>
+
+              <div class="fee-breakdown-card">
+                <div class="fee-card-top">
+                  <span class="fee-amount-bold">LKR {{ inv.balanceDue | number:'1.0-0' }}</span>
+                  <span class="fee-arrow-ico">↗</span>
+                </div>
+                <span class="fee-category-badge">Balance Due</span>
+                <span class="fee-title-main">Due: {{ inv.dueDate | date:'mediumDate' }}</span>
+              </div>
+
+              <a routerLink="/billing" class="fee-breakdown-card add-fee-card">
+                <div class="add-plus-sym">+</div>
+                <span class="add-fee-txt">Record Payment</span>
+              </a>
+            </div>
+
+            <div class="detail-footer-bar">
+              <div class="totals-group">
+                <div class="total-item">
+                  <span class="tot-lbl">Sub Total</span>
+                  <span class="tot-val">LKR {{ inv.subtotal | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-item">
+                  <span class="tot-lbl">Total Amount</span>
+                  <span class="tot-val">LKR {{ inv.totalAmount | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-item highlight-due">
+                  <span class="tot-lbl">Outstanding Due</span>
+                  <span class="tot-val due-amount">LKR {{ inv.balanceDue | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-actions-group">
+                <a routerLink="/billing" class="btn-tool-circle" title="Chambers Billing Hub">
+                  <app-icon name="billing" [size]="16" [strokeWidth]="2.2"></app-icon>
+                </a>
+                <a routerLink="/billing" class="btn-payout-white">
+                  <span>View Full Invoice ➔</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

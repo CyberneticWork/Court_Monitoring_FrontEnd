@@ -1,0 +1,216 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Management Reports & Analytics</h1>
+      </div>
+      <p class="page-subtitle">Practice performance, case pipeline stages, attorney workload and collection metrics</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-primary-action" onclick="window.print()" id="btn-print-report">
+        <app-icon name="file-text" [size]="16" [strokeWidth]="2.2"></app-icon>
+        <span>Export / Print Summary</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="activeTab.set('workload')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="users" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Active Legal Team</span>
+        <div class="mini-kpi-val">{{ totalAttorneysCount() }} <span class="mini-kpi-sub">Counsel & Staff</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('stages')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="folder-open" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Pipeline Matters</span>
+        <div class="mini-kpi-val">{{ totalMattersInPipeline() }} <span class="mini-kpi-sub">Active Files</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('workload')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="briefcase" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Lead Briefs Assigned</span>
+        <div class="mini-kpi-val">{{ totalLeadMatters() }} <span class="mini-kpi-sub">Lead Matters</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('workload')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="tasks" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Active Chambers Tasks</span>
+        <div class="mini-kpi-val">{{ totalActiveTasks() }} <span class="mini-kpi-sub">In Progress</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. SOLID DARK MASTER ANALYTICS CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'workload'" 
+          (click)="activeTab.set('workload')"
+          id="tab-workload-btn"
+        >
+          <app-icon name="users" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Attorney Workload & Capacity Matrix</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'workload'">
+            {{ workload().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'stages'" 
+          (click)="activeTab.set('stages')"
+          id="tab-stages-btn"
+        >
+          <app-icon name="folder-open" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Matter Stage Pipeline Breakdown</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'stages'">
+            {{ matterStages().length }} Stages
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">Chambers Analytical Overview</span>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 1: ATTORNEY WORKLOAD TABLE
+         ========================================================================= -->
+    @if (activeTab() === 'workload') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th>Legal Counsel / Advocate</th>
+              <th style="width: 150px;">Chambers Role</th>
+              <th style="width: 140px;">Lead Matters</th>
+              <th style="width: 140px;">Junior / Support</th>
+              <th style="width: 150px;">Active Tasks</th>
+              <th style="width: 160px; text-align: right;">Capacity Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of workload(); track w.id) {
+              <tr class="matter-row">
+                <!-- Counsel -->
+                <td>
+                  <div class="counsel-cell">
+                    <div class="counsel-avatar">
+                      {{ (w.fullName || 'CA').substring(0, 2).toUpperCase() }}
+                    </div>
+                    <div class="counsel-info">
+                      <span class="counsel-name-bold">{{ w.fullName }}</span>
+                      <span class="counsel-email-sub font-mono">{{ w.email }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Role -->
+                <td>
+                  <span class="role-chip" [ngClass]="{
+                    'role-partner': w.role === 'PARTNER' || w.role === 'ADMIN',
+                    'role-attorney': w.role === 'ATTORNEY',
+                    'role-junior': w.role === 'JUNIOR',
+                    'role-staff': w.role === 'SECRETARY' || w.role === 'ACCOUNTS'
+                  }">{{ w.role }}</span>
+                </td>
+
+                <!-- Lead Matters -->
+                <td>
+                  <span class="lead-count-badge font-mono font-bold">{{ w._count?.leadMatters || 0 }} Matters</span>
+                </td>
+
+                <!-- Junior Matters -->
+                <td>
+                  <span class="support-count-text">{{ w._count?.juniorMatters || 0 }} Briefs</span>
+                </td>
+
+                <!-- Active Tasks -->
+                <td>
+                  <span class="tasks-count-badge font-mono">{{ w._count?.assignedTasks || 0 }} Active</span>
+                </td>
+
+                <!-- Capacity Status -->
+                <td style="text-align: right;">
+                  @if ((w._count?.leadMatters || 0) + (w._count?.assignedTasks || 0) > 4) {
+                    <span class="capacity-chip capacity-high">High Load</span>
+                  } @else if ((w._count?.leadMatters || 0) + (w._count?.assignedTasks || 0) > 1) {
+                    <span class="capacity-chip capacity-optimal">Optimal</span>
+                  } @else {
+                    <span class="capacity-chip capacity-available">Available</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- =========================================================================
+         TAB 2: MATTER STAGES PIPELINE BREAKDOWN
+         ========================================================================= -->
+    @if (activeTab() === 'stages') {
+      <div class="pipeline-breakdown-card">
+        <div class="pipeline-grid">
+          @for (st of matterStages(); track st.stage) {
+            <div class="stage-pipeline-card">
+              <div class="stage-card-header">
+                <div class="stage-title-wrap">
+                  <span class="stage-dot"></span>
+                  <span class="stage-name-text">{{ st.stage }}</span>
+                </div>
+                <div class="stage-count-tag font-mono font-bold">
+                  {{ st._count?.id || 0 }} <span class="sub-text">Matters</span>
+                </div>
+              </div>
+
+              <div class="stage-progress-bar-bg mt-3">
+                <div 
+                  class="stage-progress-fill" 
+                  [style.width.%]="getStagePercent(st._count?.id || 0) > 5 ? getStagePercent(st._count?.id || 0) : 8"
+                ></div>
+              </div>
+
+              <div class="stage-card-footer mt-2">
+                <span class="percent-label">{{ getStagePercent(st._count?.id || 0) }}% of active docket</span>
+                <span class="active-status-text">Active Pipeline</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

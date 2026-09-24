@@ -1,0 +1,11 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.lpms-svg-icon {
+  vertical-align: middle;
+  transition: stroke 0.2s ease, transform 0.2s ease;
+}

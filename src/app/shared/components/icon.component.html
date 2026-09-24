@@ -1,0 +1,203 @@
+<svg 
+  [attr.width]="size" 
+  [attr.height]="size" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  [attr.stroke-width]="strokeWidth" 
+  stroke-linecap="round" 
+  stroke-linejoin="round"
+  class="lpms-svg-icon"
+>
+  <!-- Scale of Justice / Chambers -->
+  @if (name === 'scale') {
+    <path d="M12 3v18" />
+    <path d="M6 6h12" />
+    <path d="M3 10l3-4 3 4a3 3 0 0 1-6 0z" />
+    <path d="M15 10l3-4 3 4a3 3 0 0 1-6 0z" />
+    <path d="M4 21h16" />
+  }
+
+  <!-- Courthouse / Supreme Court / District Court -->
+  @else if (name === 'courthouse') {
+    <path d="M3 21h18" />
+    <path d="M5 21V10" />
+    <path d="M19 21V10" />
+    <path d="M9 21V10" />
+    <path d="M14 21V10" />
+    <path d="M2 10h20" />
+    <path d="M12 3L2 10h20L12 3z" />
+    <path d="M12 6v1" />
+  }
+
+  <!-- Judge Gavel / Hearing Outcome -->
+  @else if (name === 'gavel') {
+    <path d="M14 13l-7.5 7.5a2.121 2.121 0 0 1-3-3L11 10" />
+    <path d="M16 16l4-4" />
+    <path d="M13 7l4-4a2.121 2.121 0 0 1 3 3l-4 4" />
+    <path d="M9 11l4-4" />
+    <path d="M8 21h8" />
+  }
+
+  <!-- Legal Matter / Case Folder -->
+  @else if (name === 'folder') {
+    <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" />
+  }
+
+  <!-- Folder Open / Active Case -->
+  @else if (name === 'folder-open') {
+    <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" />
+    <path d="M2 10h20l-2 10H4L2 10z" />
+  }
+
+  <!-- Clients / Consultations CRM -->
+  @else if (name === 'users') {
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  }
+
+  <!-- Single Client / Profile -->
+  @else if (name === 'user') {
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  }
+
+  <!-- Chambers Diary / Master Court Calendar -->
+  @else if (name === 'calendar') {
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+    <path d="M8 14h.01" />
+    <path d="M12 14h.01" />
+    <path d="M16 14h.01" />
+    <path d="M8 18h.01" />
+    <path d="M12 18h.01" />
+    <path d="M16 18h.01" />
+  }
+
+  <!-- Legal Tasks / Motion Checklist -->
+  @else if (name === 'tasks' || name === 'clipboard-check' || name === 'check-circle') {
+    <path d="M9 11l3 3L22 4" />
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+  }
+
+  <!-- Deeds Safe / Vault / Archive Box -->
+  @else if (name === 'vault' || name === 'archive' || name === 'safe') {
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M3 10h18" />
+    <circle cx="12" cy="15" r="2" />
+    <path d="M12 17v2" />
+  }
+
+  <!-- Deeds Scroll / Physical Title Deeds -->
+  @else if (name === 'deed' || name === 'scroll') {
+    <path d="M8 2h8a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z" />
+    <path d="M8 7h8" />
+    <path d="M8 11h8" />
+    <path d="M8 15h5" />
+  }
+
+  <!-- Billing / Currency / Invoicing -->
+  @else if (name === 'billing' || name === 'currency') {
+    <rect x="2" y="6" width="20" height="12" rx="2" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M6 12h.01M18 12h.01" />
+  }
+
+  <!-- Invoice Document / Fee Bill -->
+  @else if (name === 'invoice') {
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  }
+
+  <!-- Analytics / KPI Growth Charts -->
+  @else if (name === 'reports' || name === 'chart') {
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+    <path d="M2 20h20" />
+  }
+
+  <!-- Dashboard Gauge / Metrics -->
+  @else if (name === 'dashboard') {
+    <rect x="3" y="3" width="7" height="9" rx="1" />
+    <rect x="14" y="3" width="7" height="5" rx="1" />
+    <rect x="14" y="12" width="7" height="9" rx="1" />
+    <rect x="3" y="16" width="7" height="5" rx="1" />
+  }
+
+  <!-- Security Settings / Administration Cog -->
+  @else if (name === 'settings') {
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  }
+
+  <!-- Audit Shield / Compliance -->
+  @else if (name === 'shield') {
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M9 12l2 2 4-4" />
+  }
+
+  <!-- Search Magnifier -->
+  @else if (name === 'search') {
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  }
+
+  <!-- Sun (Light Mode) -->
+  @else if (name === 'sun') {
+    <circle cx="12" cy="12" r="5" />
+    <line x1="12" y1="1" x2="12" y2="3" />
+    <line x1="12" y1="21" x2="12" y2="23" />
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+    <line x1="1" y1="12" x2="3" y2="12" />
+    <line x1="21" y1="12" x2="23" y2="12" />
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+  }
+
+  <!-- Moon (Dark Mode) -->
+  @else if (name === 'moon') {
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  }
+
+  <!-- Log Out / Exit -->
+  @else if (name === 'logout') {
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  }
+
+  <!-- Plus / New Item -->
+  @else if (name === 'plus') {
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  }
+
+  <!-- Menu / Hamburger -->
+  @else if (name === 'menu') {
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  }
+
+  <!-- File / Document -->
+  @else if (name === 'file' || name === 'document') {
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  }
+
+  <!-- Default Fallback Circle -->
+  @else {
+    <circle cx="12" cy="12" r="10" />
+  }
+</svg>

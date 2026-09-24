@@ -1,0 +1,1405 @@
+@if (matter(); as m) {
+  <div class="matter-detail-workspace">
+    <!-- =========================================================================
+         1. TOP BREADCRUMB & WORKFLOW ACTION BAR
+         ========================================================================= -->
+    <div class="top-breadcrumb-bar">
+      <div class="breadcrumbs-left">
+        <a routerLink="/matters" class="breadcrumb-back-link">
+          <app-icon name="arrow-left" [size]="15" [strokeWidth]="2.5"></app-icon>
+          <span>Legal Matters</span>
+        </a>
+        <span class="breadcrumb-slash">/</span>
+        <span class="matter-code-badge font-mono">{{ m.matterNumber }}</span>
+      </div>
+
+      <div class="quick-top-actions">
+        <button type="button" class="btn-action-pill" (click)="openScheduleHearingModal(m.courtCases?.[0] || null)" title="Schedule Court Hearing">
+          <app-icon name="calendar" [size]="14" [strokeWidth]="2"></app-icon>
+          <span>Schedule Hearing</span>
+        </button>
+
+        <button type="button" class="btn-action-pill" (click)="showUploadModal.set(true)" title="Upload Legal Document">
+          <app-icon name="upload" [size]="14" [strokeWidth]="2"></app-icon>
+          <span>Upload Document</span>
+        </button>
+
+        <button type="button" class="btn-action-pill" (click)="showNewTaskModal.set(true)" title="Assign Legal Task">
+          <app-icon name="check-square" [size]="14" [strokeWidth]="2"></app-icon>
+          <span>Add Task</span>
+        </button>
+
+        <button type="button" class="btn-primary-action-pill" (click)="showInvoiceModal.set(true)" title="Generate Client Invoice">
+          <app-icon name="file-text" [size]="14" [strokeWidth]="2"></app-icon>
+          <span>Generate Invoice</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         2. HERO ROYAL INDIGO CASE FILE PROFILE CARD (Finnova Signature Profile)
+         ========================================================================= -->
+    <div class="hero-case-profile-card">
+      <!-- Header Meta Banner -->
+      <div class="profile-head-banner">
+        <div class="head-left-tags">
+          <span class="case-file-docket-tag font-mono">CASE DOCKET # {{ m.matterNumber }}</span>
+          <span class="profile-status-pill">{{ m.status || 'ACTIVE' }}</span>
+          <span class="profile-practice-pill">{{ m.category | titlecase }}</span>
+          <span class="priority-pill" [ngClass]="{
+            'priority-high': m.priority === 'HIGH' || m.priority === 'URGENT',
+            'priority-med': m.priority === 'MEDIUM',
+            'priority-low': m.priority === 'LOW' || !m.priority
+          }">
+            <span class="pill-dot"></span>
+            {{ m.priority || 'NORMAL' }} PRIORITY
+          </span>
+        </div>
+
+        <div class="head-right-stage">
+          <span class="stage-label-txt">LITIGATION STAGE:</span>
+          <div class="stage-switcher-capsule">
+            <select class="stage-select-box" [ngModel]="m.stage" (ngModelChange)="updateStage($event)">
+              <option value="INTAKE">1. Intake</option>
+              <option value="PLEADINGS">2. Pleadings</option>
+              <option value="DISCOVERY">3. Discovery</option>
+              <option value="TRIAL">4. Trial</option>
+              <option value="JUDGEMENT">5. Judgement</option>
+              <option value="APPEAL">6. Appeal</option>
+              <option value="EXECUTION">7. Execution</option>
+              <option value="CLOSED">8. Closed</option>
+            </select>
+            <span class="stage-chevron">▾</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Case Title -->
+      <div class="profile-title-row">
+        <h1 class="profile-case-title">{{ m.title }}</h1>
+        <span class="chambers-scale-ico">⚖️</span>
+      </div>
+
+      <!-- 4 Glass KPI Metric Cards -->
+      <div class="glass-kpi-grid">
+        <!-- Card 1: Client Info -->
+        <div class="glass-kpi-card" routerLink="/clients" title="View Client File">
+          <div class="kpi-card-top">
+            <span class="glass-kpi-label">CLIENT IDENTITY</span>
+            <span class="kpi-arrow-ico">↗</span>
+          </div>
+          <div class="glass-kpi-val">{{ m.client?.name || 'Registered Client' }}</div>
+          <div class="glass-kpi-sub font-mono">{{ m.client?.clientNumber || 'CLI-2026-0001' }} • {{ m.client?.phone || 'Direct Phone' }}</div>
+        </div>
+
+        <!-- Card 2: Lead Counsel -->
+        <div class="glass-kpi-card">
+          <div class="kpi-card-top">
+            <span class="glass-kpi-label">LEAD ASSIGNED COUNSEL</span>
+            <app-icon name="user" [size]="14" class="kpi-arrow-ico"></app-icon>
+          </div>
+          <div class="glass-kpi-val">{{ m.leadAttorney?.fullName || 'Assigned Counsel' }}</div>
+          <div class="glass-kpi-sub">{{ m.leadAttorney?.role || 'Attorney-at-Law' }} • Chambers Lead</div>
+        </div>
+
+        <!-- Card 3: Court Forum -->
+        <div class="glass-kpi-card">
+          <div class="kpi-card-top">
+            <span class="glass-kpi-label">COURT FORUM / JURISDICTION</span>
+            <app-icon name="calendar" [size]="14" class="kpi-arrow-ico"></app-icon>
+          </div>
+          <div class="glass-kpi-val">{{ m.courtJurisdiction || 'Pre-Filing Stage' }}</div>
+          <div class="glass-kpi-sub font-mono">
+            @if (m.courtCases?.length > 0) {
+              Docket: {{ m.courtCases[0].officialCaseNumber }}
+            } @else {
+              No judicial case number assigned
+            }
+          </div>
+        </div>
+
+        <!-- Card 4: Fee & Billing Basis -->
+        <div class="glass-kpi-card">
+          <div class="kpi-card-top">
+            <span class="glass-kpi-label">AGREED FEE / RETAINER</span>
+            <app-icon name="credit-card" [size]="14" class="kpi-arrow-ico"></app-icon>
+          </div>
+          <div class="glass-kpi-val">LKR {{ (m.agreedFee || 0) | number:'1.2-2' }}</div>
+          <div class="glass-kpi-sub">{{ m.feeArrangement || 'FIXED' }} Arrangement • Retainer Brief</div>
+        </div>
+      </div>
+
+      <!-- Bottom Info Ribbon -->
+      <div class="profile-bottom-ribbon">
+        <div class="ribbon-item">
+          <span class="ribbon-lbl">Client Role:</span>
+          <span class="ribbon-val">{{ m.clientRole || 'Plaintiff / Petitioner' }}</span>
+        </div>
+        <span class="ribbon-sep">•</span>
+        <div class="ribbon-item">
+          <span class="ribbon-lbl">Opposing Party:</span>
+          <span class="ribbon-val text-rose">{{ m.opposingParty || 'None specified' }}</span>
+        </div>
+        <span class="ribbon-sep">•</span>
+        <div class="ribbon-item">
+          <span class="ribbon-lbl">Opposing Counsel:</span>
+          <span class="ribbon-val">{{ m.opposingCounsel || 'None specified' }}</span>
+        </div>
+        <span class="ribbon-sep">•</span>
+        <div class="ribbon-item">
+          <span class="ribbon-lbl">Incepted Date:</span>
+          <span class="ribbon-val">{{ m.openedDate | date:'mediumDate' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         3. SOLID DARK WORKSPACE DOCKET CONTAINER (#141923 Dashboard Harmonized)
+         ========================================================================= -->
+    <div class="dark-master-detail-container">
+      <!-- TOP PILL TABS SWITCHER -->
+      <div class="master-detail-top-tabs">
+        <div class="tabs-center-pills">
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'overview'"
+            (click)="activeTab = 'overview'"
+          >
+            <app-icon name="file-text" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Overview & Facts</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'hearings'"
+            (click)="activeTab = 'hearings'"
+          >
+            <app-icon name="calendar" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Court & Hearings</span>
+            <span class="tab-count-badge">{{ getHearingsCount() }}</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'documents'"
+            (click)="activeTab = 'documents'"
+          >
+            <app-icon name="folder" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Document Vault</span>
+            <span class="tab-count-badge">{{ m.documents?.length || 0 }}</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'vault'"
+            (click)="activeTab = 'vault'"
+          >
+            <app-icon name="lock" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Safe Custody Register</span>
+            <span class="tab-count-badge">{{ m.physicalDocuments?.length || 0 }}</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'tasks'"
+            (click)="activeTab = 'tasks'"
+          >
+            <app-icon name="check-square" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Tasks & To-Do</span>
+            <span class="tab-count-badge highlight-pill">{{ m.tasks?.length || 0 }}</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'comms'"
+            (click)="activeTab = 'comms'"
+          >
+            <app-icon name="message-square" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Correspondence</span>
+            <span class="tab-count-badge">{{ m.communications?.length || 0 }}</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'financials'"
+            (click)="activeTab = 'financials'"
+          >
+            <app-icon name="credit-card" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Financials & Invoices</span>
+            <span class="tab-count-badge">{{ m.invoices?.length || 0 }}</span>
+          </button>
+
+          <button 
+            type="button" 
+            class="tab-pill-btn" 
+            [class.active]="activeTab === 'timeline'"
+            (click)="activeTab = 'timeline'"
+          >
+            <app-icon name="clock" [size]="15" [strokeWidth]="2"></app-icon>
+            <span>Audit Timeline</span>
+          </button>
+        </div>
+
+        <div class="tabs-right-actions">
+          <a routerLink="/reports" class="tab-action-icon" title="View Practice Reports">
+            <app-icon name="reports" [size]="18" [strokeWidth]="2.2"></app-icon>
+          </a>
+          <a routerLink="/calendar" class="tab-action-icon" title="Court Master Calendar">
+            <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+          </a>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           TAB 1: OVERVIEW & CASE FACTS
+           ===================================================================== -->
+      @if (activeTab === 'overview') {
+        <div class="overview-two-col-grid">
+          <!-- Left Column: Case Facts & Chambers Team -->
+          <div class="overview-card-box">
+            <div class="box-head-title">
+              <h3 class="box-heading">Case Facts & Litigation Strategy Brief</h3>
+            </div>
+            <div class="box-body-content">
+              <p class="case-desc-paragraph">
+                {{ m.description || 'No detailed case facts or litigation instructions recorded for this matter yet.' }}
+              </p>
+
+              <div class="sub-section-divider"></div>
+
+              <h4 class="sub-section-heading">Assigned Chambers Legal Team</h4>
+              <div class="legal-team-grid">
+                <div class="team-counsel-card">
+                  <div class="counsel-avatar-circle">
+                    {{ (m.leadAttorney?.fullName || 'LA').substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div class="counsel-text-details">
+                    <span class="counsel-role-lbl">LEAD COUNSEL</span>
+                    <strong class="counsel-name-txt">{{ m.leadAttorney?.fullName }}</strong>
+                    <span class="counsel-email-txt">{{ m.leadAttorney?.email }}</span>
+                  </div>
+                </div>
+
+                @if (m.juniorAttorney) {
+                  <div class="team-counsel-card">
+                    <div class="counsel-avatar-circle avatar-junior">
+                      {{ (m.juniorAttorney?.fullName || 'JA').substring(0, 2).toUpperCase() }}
+                    </div>
+                    <div class="counsel-text-details">
+                      <span class="counsel-role-lbl">JUNIOR ASSOCIATE</span>
+                      <strong class="counsel-name-txt">{{ m.juniorAttorney?.fullName }}</strong>
+                      <span class="counsel-email-txt">{{ m.juniorAttorney?.email }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Litigation Details & Opposing Parties Matrix -->
+          <div class="overview-card-box">
+            <div class="box-head-title">
+              <h3 class="box-heading">Litigation Details & Opposing Parties</h3>
+            </div>
+            <div class="box-body-content">
+              <div class="matrix-info-stack">
+                <div class="matrix-row">
+                  <span class="matrix-label">Client Role in Court</span>
+                  <strong class="matrix-val">{{ m.clientRole || 'Plaintiff / Petitioner' }}</strong>
+                </div>
+                <div class="matrix-row">
+                  <span class="matrix-label">Opposing Party Name</span>
+                  <strong class="matrix-val text-rose">{{ m.opposingParty || 'None specified' }}</strong>
+                </div>
+                <div class="matrix-row">
+                  <span class="matrix-label">Opposing Counsel / Law Firm</span>
+                  <strong class="matrix-val">{{ m.opposingCounsel || 'None specified' }}</strong>
+                </div>
+                <div class="matrix-row">
+                  <span class="matrix-label">Court Forum / Jurisdiction</span>
+                  <strong class="matrix-val">{{ m.courtJurisdiction || 'District Court of Colombo' }}</strong>
+                </div>
+                <div class="matrix-row">
+                  <span class="matrix-label">Fee Structure</span>
+                  <strong class="matrix-val text-amber">{{ m.feeArrangement }} (Agreed: LKR {{ (m.agreedFee || 0) | number:'1.2-2' }})</strong>
+                </div>
+                <div class="matrix-row">
+                  <span class="matrix-label">Matter Incepted Date</span>
+                  <span class="matrix-val">{{ m.openedDate | date:'mediumDate' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 2: COURT PROCEEDINGS & HEARINGS
+           ===================================================================== -->
+      @if (activeTab === 'hearings') {
+        <div class="tab-pane-container">
+          <div class="tab-inner-header">
+            <div>
+              <h3 class="tab-heading-txt">Court Proceedings & Hearing Dockets</h3>
+              <p class="tab-subheading-txt">Judicial tracking, courtroom logs, and hearing outcome directions</p>
+            </div>
+            <button type="button" class="btn-gradient-primary-sm" (click)="showNewCaseModal.set(true)">
+              <span>+ Register Court Case</span>
+            </button>
+          </div>
+
+          @if (!m.courtCases || m.courtCases.length === 0) {
+            <div class="empty-tab-box">
+              <app-icon name="calendar" [size]="36" [strokeWidth]="1.5" class="empty-ico"></app-icon>
+              <h4 class="empty-title-txt">No Court Cases Registered</h4>
+              <p class="empty-desc-txt">Register an official court case docket number to schedule hearing dates and track court orders.</p>
+              <button type="button" class="btn-gradient-primary-sm" (click)="showNewCaseModal.set(true)">
+                <span>+ Register Official Case Number</span>
+              </button>
+            </div>
+          } @else {
+            @for (caseItem of m.courtCases; track caseItem.id) {
+              <div class="court-case-card mb-4">
+                <div class="case-card-header">
+                  <div class="case-header-left">
+                    <span class="case-badge-pill font-mono">{{ caseItem.officialCaseNumber }}</span>
+                    <h4 class="case-court-title">{{ caseItem.court?.name }}</h4>
+                    <div class="case-meta-tags">Case Type: <strong>{{ caseItem.caseType }}</strong> • Stage: <strong>{{ caseItem.currentStage }}</strong></div>
+                  </div>
+                  <button type="button" class="btn-ghost-sm" (click)="openScheduleHearingModal(caseItem)">
+                    <span>+ Schedule Hearing</span>
+                  </button>
+                </div>
+
+                <div class="case-card-table-area">
+                  <h5 class="sub-table-heading">Hearings Record</h5>
+                  @if (!caseItem.hearings || caseItem.hearings.length === 0) {
+                    <div class="text-dim-notice">No hearing dates scheduled for this court docket yet.</div>
+                  } @else {
+                    <table class="finnova-matters-table">
+                      <thead>
+                        <tr>
+                          <th>Hearing Date</th>
+                          <th>Purpose</th>
+                          <th>Courtroom & Judge</th>
+                          <th>Status</th>
+                          <th>Outcome & Directions</th>
+                          <th style="text-align: right;">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (h of caseItem.hearings; track h.id) {
+                          <tr class="matter-row">
+                            <td>
+                              <div class="hearing-date-val">{{ h.hearingDate | date:'mediumDate' }}</div>
+                              <div class="hearing-time-val">{{ h.hearingTime || '09:30 AM' }}</div>
+                            </td>
+                            <td><span class="stage-capsule">{{ h.purpose }}</span></td>
+                            <td>
+                              <div class="font-medium text-main">{{ h.courtroom || 'Courtroom 01' }}</div>
+                              <div class="text-dim text-xs">{{ h.judgeName || 'Hon. Judge' }}</div>
+                            </td>
+                            <td>
+                              <span class="priority-pill" [ngClass]="h.status === 'COMPLETED' ? 'priority-low' : 'priority-med'">
+                                <span class="pill-dot"></span>
+                                {{ h.status }}
+                              </span>
+                            </td>
+                            <td>
+                              @if (h.outcomeSummary) {
+                                <div class="font-semibold text-main text-sm">{{ h.outcomeSummary }}</div>
+                                @if (h.courtDirections) {
+                                  <div class="text-xs text-dim mt-0.5">Directions: {{ h.courtDirections }}</div>
+                                }
+                                @if (h.nextHearingDate) {
+                                  <div class="text-xs text-amber font-semibold mt-1">Next: {{ h.nextHearingDate | date:'mediumDate' }} ({{ h.nextHearingPurpose || 'Calling' }})</div>
+                                }
+                              } @else {
+                                <span class="text-dim text-xs">Pending hearing appearance</span>
+                              }
+                            </td>
+                            <td style="text-align: right;">
+                              <button type="button" class="btn-open-workspace" (click)="openOutcomeModal(h, caseItem)">
+                                <span>{{ h.status === 'COMPLETED' ? 'Edit Outcome' : 'Record Outcome' }}</span>
+                              </button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 3: DOCUMENT VAULT
+           ===================================================================== -->
+      @if (activeTab === 'documents') {
+        <div class="tab-pane-container">
+          <div class="tab-inner-header">
+            <div>
+              <h3 class="tab-heading-txt">Digital Document Vault</h3>
+              <p class="tab-subheading-txt">Pleadings, evidence, filings, court orders with version control</p>
+            </div>
+            <button type="button" class="btn-gradient-primary-sm" (click)="showUploadModal.set(true)">
+              <app-icon name="upload" [size]="14" [strokeWidth]="2"></app-icon>
+              <span>Upload Document</span>
+            </button>
+          </div>
+
+          <div class="table-wrapper-card">
+            <table class="finnova-matters-table">
+              <thead>
+                <tr>
+                  <th>Document Name</th>
+                  <th>Category</th>
+                  <th>Version</th>
+                  <th>Size</th>
+                  <th>Uploaded By</th>
+                  <th>Date</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (doc of m.documents; track doc.id) {
+                  <tr class="matter-row">
+                    <td>
+                      <div class="doc-title-row">
+                        <app-icon name="file-text" [size]="16" class="text-indigo"></app-icon>
+                        <div>
+                          <div class="font-bold text-main">{{ doc.name }}</div>
+                          <div class="text-xs text-dim font-mono">{{ doc.originalFileName }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span class="stage-capsule">{{ doc.category }}</span></td>
+                    <td><span class="practice-chip">v{{ doc.currentVersion }}</span></td>
+                    <td>{{ (doc.fileSize / (1024 * 1024)).toFixed(2) }} MB</td>
+                    <td>{{ doc.uploadedBy?.fullName || 'Counsel' }}</td>
+                    <td>{{ doc.createdAt | date:'mediumDate' }}</td>
+                    <td style="text-align: right;">
+                      <div class="action-btn-group">
+                        <button type="button" class="btn-open-workspace" (click)="openVersionModal(doc)">
+                          <span>v{{ doc.versions?.length || 1 }}</span>
+                        </button>
+                        <a [href]="'http://localhost:4000' + doc.fileUrl" target="_blank" class="btn-open-workspace">
+                          <span>Download ⬇</span>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @if (!m.documents || m.documents.length === 0) {
+                  <tr>
+                    <td colspan="7" class="text-center py-6 text-dim">
+                      No documents uploaded in this matter vault yet.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 4: PHYSICAL CUSTODY REGISTER
+           ===================================================================== -->
+      @if (activeTab === 'vault') {
+        <div class="tab-pane-container">
+          <div class="tab-inner-header">
+            <div>
+              <h3 class="tab-heading-txt">Original Physical Document Safe Custody</h3>
+              <p class="tab-subheading-txt">Chain of custody registry for original deeds, blueprints, and court decrees</p>
+            </div>
+            <button type="button" class="btn-gradient-primary-sm" (click)="showPhysicalDocModal.set(true)">
+              <app-icon name="lock" [size]="14" [strokeWidth]="2"></app-icon>
+              <span>Accept Original Custody</span>
+            </button>
+          </div>
+
+          <div class="table-wrapper-card">
+            <table class="finnova-matters-table">
+              <thead>
+                <tr>
+                  <th>Document Title</th>
+                  <th>Type & Reference</th>
+                  <th>Received From</th>
+                  <th>Safe / Storage Location</th>
+                  <th>Status</th>
+                  <th>Received Date</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of m.physicalDocuments; track p.id) {
+                  <tr class="matter-row">
+                    <td>
+                      <div class="font-bold text-main">{{ p.title }}</div>
+                      <div class="text-xs text-dim">Custody by: {{ p.receivedBy?.fullName }}</div>
+                    </td>
+                    <td>
+                      <span class="practice-chip">{{ p.documentType }}</span>
+                      <div class="text-xs font-mono text-amber mt-1">{{ p.referenceNo || 'No ref' }}</div>
+                    </td>
+                    <td>{{ p.receivedFrom }}</td>
+                    <td>
+                      <span class="location-chip">📍 {{ p.physicalLocation }}</span>
+                    </td>
+                    <td>
+                      <span class="priority-pill" [ngClass]="p.status === 'IN_CUSTODY' ? 'priority-low' : 'priority-med'">
+                        <span class="pill-dot"></span>
+                        {{ p.status }}
+                      </span>
+                    </td>
+                    <td>{{ p.receivedDate | date:'mediumDate' }}</td>
+                    <td style="text-align: right;">
+                      @if (p.status === 'IN_CUSTODY') {
+                        <button type="button" class="btn-open-workspace" (click)="openReturnModal(p)">
+                          <span>Hand Over / Return</span>
+                        </button>
+                      } @else {
+                        <span class="text-xs text-dim">Returned to: {{ p.returnedTo }}</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (!m.physicalDocuments || m.physicalDocuments.length === 0) {
+                  <tr>
+                    <td colspan="7" class="text-center py-6 text-dim">
+                      No physical original documents in custody for this matter.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 5: LEGAL TASKS
+           ===================================================================== -->
+      @if (activeTab === 'tasks') {
+        <div class="tab-pane-container">
+          <div class="tab-inner-header">
+            <div>
+              <h3 class="tab-heading-txt">Matter Action Items & Deadlines</h3>
+              <p class="tab-subheading-txt">Legal research, drafting, filing deadlines, and associate assignments</p>
+            </div>
+            <button type="button" class="btn-gradient-primary-sm" (click)="showNewTaskModal.set(true)">
+              <app-icon name="check-square" [size]="14" [strokeWidth]="2"></app-icon>
+              <span>Create Task</span>
+            </button>
+          </div>
+
+          <div class="table-wrapper-card">
+            <table class="finnova-matters-table">
+              <thead>
+                <tr>
+                  <th>Task Description</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Assigned To</th>
+                  <th>Due Date</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of m.tasks; track t.id) {
+                  <tr class="matter-row">
+                    <td>
+                      <div class="font-bold text-main">{{ t.title }}</div>
+                      @if (t.description) {
+                        <div class="text-xs text-dim mt-0.5">{{ t.description }}</div>
+                      }
+                    </td>
+                    <td>
+                      <span class="priority-pill" [ngClass]="{
+                        'priority-high': t.priority === 'HIGH',
+                        'priority-med': t.priority === 'MEDIUM',
+                        'priority-low': t.priority === 'LOW'
+                      }">
+                        <span class="pill-dot"></span>
+                        {{ t.priority }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="stage-capsule" [ngClass]="t.status === 'COMPLETED' ? 'stage-judgement' : 'stage-intake'">
+                        {{ t.status }}
+                      </span>
+                    </td>
+                    <td>{{ t.assignedTo?.fullName }}</td>
+                    <td>
+                      <span class="font-bold text-amber">{{ t.dueDate | date:'mediumDate' }}</span>
+                    </td>
+                    <td style="text-align: right;">
+                      @if (t.status !== 'COMPLETED') {
+                        <button type="button" class="btn-open-workspace" (click)="completeTask(t)">
+                          <span>✓ Mark Done</span>
+                        </button>
+                      } @else {
+                        <span class="text-xs font-bold text-emerald">✓ Completed</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (!m.tasks || m.tasks.length === 0) {
+                  <tr>
+                    <td colspan="6" class="text-center py-6 text-dim">
+                      No active tasks assigned for this matter.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 6: COMMUNICATIONS
+           ===================================================================== -->
+      @if (activeTab === 'comms') {
+        <div class="tab-pane-container">
+          <div class="tab-inner-header">
+            <div>
+              <h3 class="tab-heading-txt">Correspondence & Client Engagement Log</h3>
+              <p class="tab-subheading-txt">Calls, meeting minutes, client instructions, and official emails</p>
+            </div>
+            <button type="button" class="btn-gradient-primary-sm" (click)="showNewCommModal.set(true)">
+              <app-icon name="message-square" [size]="14" [strokeWidth]="2"></app-icon>
+              <span>Log Communication</span>
+            </button>
+          </div>
+
+          <div class="comms-feed-stack">
+            @for (c of m.communications; track c.id) {
+              <div class="court-case-card mb-3">
+                <div class="case-card-header">
+                  <div class="flex items-center gap-2">
+                    <span class="practice-chip">{{ c.type }}</span>
+                    <span class="stage-capsule">{{ c.direction }}</span>
+                  </div>
+                  <span class="text-xs text-dim">{{ c.communicationDate | date:'medium' }}</span>
+                </div>
+                <div class="p-4">
+                  <h4 class="font-bold text-main mb-1">{{ c.subject }}</h4>
+                  <p class="text-sm text-muted">{{ c.content }}</p>
+                  <div class="text-xs text-dim mt-2">Recorded by: <strong>{{ c.recordedBy?.fullName }}</strong></div>
+                </div>
+              </div>
+            }
+            @if (!m.communications || m.communications.length === 0) {
+              <div class="empty-tab-box">
+                <app-icon name="message-square" [size]="36" [strokeWidth]="1.5" class="empty-ico"></app-icon>
+                <h4 class="empty-title-txt">No Communications Logged</h4>
+                <p class="empty-desc-txt">Keep track of client conferences, phone conversations, and instructions.</p>
+                <button type="button" class="btn-gradient-primary-sm" (click)="showNewCommModal.set(true)">
+                  <span>+ Log First Communication</span>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 7: FINANCIALS & BILLING
+           ===================================================================== -->
+      @if (activeTab === 'financials') {
+        <div class="tab-pane-container">
+          <div class="compact-kpi-strip mb-4">
+            <div class="mini-kpi-card">
+              <div class="mini-kpi-icon icon-indigo">
+                <app-icon name="credit-card" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="mini-kpi-content">
+                <span class="mini-kpi-label">Agreed Retainer Basis</span>
+                <div class="mini-kpi-val">LKR {{ (m.agreedFee || 0) | number:'1.2-2' }}</div>
+              </div>
+            </div>
+
+            <div class="mini-kpi-card">
+              <div class="mini-kpi-icon icon-cyan">
+                <app-icon name="file-text" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="mini-kpi-content">
+                <span class="mini-kpi-label">Professional Fees Logged</span>
+                <div class="mini-kpi-val">LKR {{ getTotalFees() | number:'1.2-2' }}</div>
+              </div>
+            </div>
+
+            <div class="mini-kpi-card">
+              <div class="mini-kpi-icon icon-rose">
+                <app-icon name="alert-circle" [size]="18" [strokeWidth]="2.2"></app-icon>
+              </div>
+              <div class="mini-kpi-content">
+                <span class="mini-kpi-label">Disbursements & Expenses</span>
+                <div class="mini-kpi-val">LKR {{ getTotalExpenses() | number:'1.2-2' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-inner-header">
+            <div>
+              <h3 class="tab-heading-txt">Invoices & Financial Ledger</h3>
+              <p class="tab-subheading-txt">Itemized billing, tax invoices, retainer balance, and client receipts</p>
+            </div>
+            <div class="action-btn-group">
+              <button type="button" class="btn-ghost-sm" (click)="showFeeModal.set(true)">+ Log Fee</button>
+              <button type="button" class="btn-ghost-sm" (click)="showExpenseModal.set(true)">+ Log Expense</button>
+              <button type="button" class="btn-gradient-primary-sm" (click)="showInvoiceModal.set(true)">📄 Generate Invoice</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper-card">
+            <table class="finnova-matters-table">
+              <thead>
+                <tr>
+                  <th>Invoice No.</th>
+                  <th>Issue Date</th>
+                  <th>Total Amount</th>
+                  <th>Paid Amount</th>
+                  <th>Balance Due</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (inv of m.invoices; track inv.id) {
+                  <tr class="matter-row">
+                    <td class="font-bold font-mono text-indigo">{{ inv.invoiceNumber }}</td>
+                    <td>{{ inv.issueDate | date:'mediumDate' }}</td>
+                    <td class="font-bold">LKR {{ inv.totalAmount | number:'1.2-2' }}</td>
+                    <td class="text-emerald font-semibold">LKR {{ inv.paidAmount | number:'1.2-2' }}</td>
+                    <td class="text-rose font-bold">LKR {{ inv.balanceDue | number:'1.2-2' }}</td>
+                    <td>
+                      <span class="stage-capsule" [ngClass]="{
+                        'stage-judgement': inv.status === 'PAID',
+                        'stage-trial': inv.status === 'PARTIALLY_PAID',
+                        'stage-intake': inv.status === 'ISSUED'
+                      }">{{ inv.status }}</span>
+                    </td>
+                    <td style="text-align: right;">
+                      @if (inv.status !== 'PAID') {
+                        <button type="button" class="btn-primary-action-sm" (click)="openPaymentModal(inv)">
+                          <span>💵 Record Payment</span>
+                        </button>
+                      } @else {
+                        <span class="text-xs font-bold text-emerald">Settled</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (!m.invoices || m.invoices.length === 0) {
+                  <tr>
+                    <td colspan="7" class="text-center py-6 text-dim">
+                      No official invoices issued for this matter yet.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- =====================================================================
+           TAB 8: TIMELINE & AUDIT STREAM
+           ===================================================================== -->
+      @if (activeTab === 'timeline') {
+        <div class="tab-pane-container">
+          <h3 class="tab-heading-txt mb-4">Matter Lifecycle & Audit Stream</h3>
+          <div class="timeline-trail">
+            @for (evt of m.timelineEvents; track evt.id) {
+              <div class="timeline-node">
+                <div class="node-bullet"></div>
+                <div class="court-case-card node-card">
+                  <div class="case-card-header">
+                    <span class="practice-chip">{{ evt.eventType }}</span>
+                    <span class="text-xs text-dim">{{ evt.eventDate | date:'medium' }}</span>
+                  </div>
+                  <div class="p-4">
+                    <h4 class="font-bold text-main mb-1">{{ evt.title }}</h4>
+                    <p class="text-sm text-muted">{{ evt.description }}</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. DUAL-THEME MODAL POPUPS (Hearings, Documents, Physical, Tasks, Finance)
+       ========================================================================= -->
+
+  <!-- MODAL 1: RECORD HEARING OUTCOME -->
+  @if (showOutcomeModal()) {
+    <div class="modal-clean-backdrop" (click)="showOutcomeModal.set(false)">
+      <div class="modal-window-clean modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <div>
+            <span class="modal-badge-chip">Hearing Outcome Manager</span>
+            <h3 class="modal-clean-title">Record Hearing Outcome & Directions</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showOutcomeModal.set(false)">✕</button>
+        </div>
+
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Hearing Outcome Summary <span class="required-star">*</span></label>
+            <textarea class="form-clean-textarea" [(ngModel)]="hearingOutcomeData.outcomeSummary" placeholder="e.g. Plaintiff marked documents P1 through P14. Cross-examination part-heard."></textarea>
+          </div>
+
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Court Directions / Orders Issued <span class="required-star">*</span></label>
+            <textarea class="form-clean-textarea" [(ngModel)]="hearingOutcomeData.courtDirections" placeholder="e.g. Court directed Plaintiff to tender original Deed No. 4481 by next trial date."></textarea>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Staff / Attorney Actions</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="hearingOutcomeData.staffActionsRequired" placeholder="e.g. File motion and serve summons" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Client Actions Required</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="hearingOutcomeData.clientActionsRequired" placeholder="e.g. Bring original deed from safe" />
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Next Court Date</label>
+              <input type="date" class="form-clean-input" [(ngModel)]="hearingOutcomeData.nextHearingDate" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Next Date Purpose</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="hearingOutcomeData.nextHearingPurpose" placeholder="e.g. FURTHER_TRIAL / ARGUMENT" />
+            </div>
+          </div>
+
+          <div class="form-clean-group">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="hearingOutcomeData.createFollowUpTasks" />
+              <span class="text-sm font-semibold text-main">Automatically generate workflow follow-up task and schedule next hearing date</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showOutcomeModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveHearingOutcome()">Save Outcome & Update</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 2: UPLOAD DOCUMENT -->
+  @if (showUploadModal()) {
+    <div class="modal-clean-backdrop" (click)="showUploadModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Upload Legal Document</h3>
+          <button type="button" class="btn-close-modal" (click)="showUploadModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Document Title <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="uploadData.name" placeholder="e.g. Written Submissions - Jurisdiction" />
+          </div>
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Category</label>
+            <select class="form-clean-select" [(ngModel)]="uploadData.category">
+              <option value="PLEADING">Pleading (Plaint, Answer, Motion)</option>
+              <option value="EVIDENCE">Evidence (Plans, Deeds, Invoices)</option>
+              <option value="COURT_ORDER">Court Order / Decree</option>
+              <option value="CORRESPONDENCE">Correspondence / Demand Letter</option>
+              <option value="CONTRACT">Agreement / Contract</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-clean-group">
+            <label class="form-clean-label">Select File <span class="required-star">*</span></label>
+            <input type="file" class="form-clean-input" (change)="onFileSelected($event)" />
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showUploadModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="uploadDocument()">Upload to Vault</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 3: ACCEPT PHYSICAL CUSTODY -->
+  @if (showPhysicalDocModal()) {
+    <div class="modal-clean-backdrop" (click)="showPhysicalDocModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Accept Physical Original Custody</h3>
+          <button type="button" class="btn-close-modal" (click)="showPhysicalDocModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Original Document Title <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="physicalData.title" placeholder="e.g. Original Title Deed No. 4481" />
+          </div>
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Document Type <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="physicalData.documentType">
+                <option value="TITLE_DEED">Title Deed</option>
+                <option value="SURVEY_PLAN">Surveyor Plan / Blueprint</option>
+                <option value="ORIGINAL_AGREEMENT">Original Signed Agreement</option>
+                <option value="CERTIFICATE">Certificate / Extract</option>
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Reference No.</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="physicalData.referenceNo" placeholder="e.g. DEED-4481" />
+            </div>
+          </div>
+          <div class="form-clean-grid-2">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Received From <span class="required-star">*</span></label>
+              <input type="text" class="form-clean-input" [(ngModel)]="physicalData.receivedFrom" placeholder="Client or Surveyor name" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Chambers Location <span class="required-star">*</span></label>
+              <input type="text" class="form-clean-input" [(ngModel)]="physicalData.physicalLocation" placeholder="e.g. Safe Vault Alpha - Box #04" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showPhysicalDocModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="savePhysicalDoc()">Record into Safe Vault</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 4: CREATE TASK -->
+  @if (showNewTaskModal()) {
+    <div class="modal-clean-backdrop" (click)="showNewTaskModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Create Legal Task</h3>
+          <button type="button" class="btn-close-modal" (click)="showNewTaskModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Task Title <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="newTaskData.title" placeholder="e.g. Prepare list of surveyor interrogatories" />
+          </div>
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Assign To <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newTaskData.assignedToId">
+                @for (u of users(); track u.id) {
+                  <option [value]="u.id">{{ u.fullName }} ({{ u.role }})</option>
+                }
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Priority</label>
+              <select class="form-clean-select" [(ngModel)]="newTaskData.priority">
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Due Date <span class="required-star">*</span></label>
+            <input type="date" class="form-clean-input" [(ngModel)]="newTaskData.dueDate" />
+          </div>
+          <div class="form-clean-group">
+            <label class="form-clean-label">Instructions / Description</label>
+            <textarea class="form-clean-textarea" [(ngModel)]="newTaskData.description"></textarea>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showNewTaskModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveTask()">Assign Task</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 5: RECORD PAYMENT -->
+  @if (showPaymentModal()) {
+    <div class="modal-clean-backdrop" (click)="showPaymentModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <div>
+            <span class="modal-badge-chip">{{ selectedInvoice?.invoiceNumber }}</span>
+            <h3 class="modal-clean-title">Record Client Payment</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showPaymentModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Payment Amount (LKR) <span class="required-star">*</span></label>
+            <input type="number" class="form-clean-input" [(ngModel)]="paymentData.amount" />
+          </div>
+          <div class="form-clean-grid-2">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Payment Method</label>
+              <select class="form-clean-select" [(ngModel)]="paymentData.paymentMethod">
+                <option value="BANK_TRANSFER">Bank Transfer (CEFT/SLIPS)</option>
+                <option value="CASH">Cash</option>
+                <option value="CHEQUE">Cheque</option>
+                <option value="ONLINE">Online Card Payment</option>
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Transaction Reference</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="paymentData.transactionRef" placeholder="e.g. CEFT-889901" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showPaymentModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="submitPayment()">Record & Issue Receipt</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 6: REGISTER COURT CASE -->
+  @if (showNewCaseModal()) {
+    <div class="modal-clean-backdrop" (click)="showNewCaseModal.set(false)">
+      <div class="modal-window-clean modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <div>
+            <span class="modal-badge-chip">Judicial Filing</span>
+            <h3 class="modal-clean-title">Register Official Court Case</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showNewCaseModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Court Jurisdiction <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newCaseData.courtId">
+                @for (c of courts(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.location }})</option>
+                }
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Official Docket No. <span class="required-star">*</span></label>
+              <input type="text" class="form-clean-input font-mono" [(ngModel)]="newCaseData.officialCaseNumber" placeholder="e.g. DMR/01482/2026" />
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Case Type <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newCaseData.caseType">
+                <option value="CIVIL_SUIT">Civil Suit (Money Recovery / Damages)</option>
+                <option value="PARTITION">Partition Case (Land / Property)</option>
+                <option value="COMMERCIAL">Commercial High Court Action</option>
+                <option value="TESTAMENTARY">Testamentary & Probate</option>
+                <option value="APPEAL">Appeal (Court of Appeal / Supreme Court)</option>
+                <option value="FUNDAMENTAL_RIGHTS">Fundamental Rights Petition</option>
+                <option value="CRIMINAL">Criminal Matter</option>
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Client Role <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newCaseData.clientRole">
+                <option value="PLAINTIFF">Plaintiff / Petitioner</option>
+                <option value="DEFENDANT">Defendant / Respondent</option>
+                <option value="APPELLANT">Appellant</option>
+                <option value="INTERVENIENT">Intervenient / 3rd Party</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Opposing Party Name</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="newCaseData.opposingParty" placeholder="Opponent Full Name" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Opposing Counsel</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="newCaseData.opposingCounsel" placeholder="e.g. Mr. K. Perera, PC" />
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Filing Date</label>
+              <input type="date" class="form-clean-input" [(ngModel)]="newCaseData.filingDate" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Proceeding Stage</label>
+              <select class="form-clean-select" [(ngModel)]="newCaseData.currentStage">
+                <option value="FILING">Filing & Institution</option>
+                <option value="SUMMONS">Summons / Notice</option>
+                <option value="PLEADINGS">Objections & Answer</option>
+                <option value="TRIAL">Trial / Calling</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showNewCaseModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveCourtCase()">Register Court Case</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 7: SCHEDULE HEARING -->
+  @if (showScheduleHearingModal()) {
+    <div class="modal-clean-backdrop" (click)="showScheduleHearingModal.set(false)">
+      <div class="modal-window-clean modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <div>
+            <span class="modal-badge-chip">{{ selectedCase?.officialCaseNumber }}</span>
+            <h3 class="modal-clean-title">Schedule Court Hearing Date</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showScheduleHearingModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Hearing Date <span class="required-star">*</span></label>
+              <input type="date" class="form-clean-input" [(ngModel)]="hearingScheduleData.hearingDate" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Hearing Time</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="hearingScheduleData.hearingTime" placeholder="09:30 AM" />
+            </div>
+          </div>
+
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Hearing Purpose <span class="required-star">*</span></label>
+            <select class="form-clean-select" [(ngModel)]="hearingScheduleData.purpose">
+              <option value="CALLING">Calling</option>
+              <option value="FILING_OF_PLAINT">Filing of Plaint / Answer</option>
+              <option value="OBJECTIONS">Filing Objections</option>
+              <option value="INQUIRY">Injunction Inquiry</option>
+              <option value="TRIAL">Trial (Examination-in-Chief / Cross)</option>
+              <option value="ARGUMENT">Argument / Submissions</option>
+              <option value="ORDER">Order Delivery</option>
+              <option value="JUDGEMENT">Final Judgement / Decree</option>
+            </select>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Courtroom / Hall</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="hearingScheduleData.courtroom" placeholder="Court Hall 04" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Presiding Judge</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="hearingScheduleData.judgeName" placeholder="Hon. High Court Judge" />
+            </div>
+          </div>
+
+          <div class="form-clean-group">
+            <label class="form-clean-label">Appearing Counsel</label>
+            <select class="form-clean-select" [(ngModel)]="hearingScheduleData.appearingAttorneyId">
+              @for (u of users(); track u.id) {
+                <option [value]="u.id">{{ u.fullName }} ({{ u.role }})</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showScheduleHearingModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveScheduledHearing()">Schedule Hearing</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 8: LOG FEE -->
+  @if (showFeeModal()) {
+    <div class="modal-clean-backdrop" (click)="showFeeModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Log Professional Legal Fee</h3>
+          <button type="button" class="btn-close-modal" (click)="showFeeModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Fee Description <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="feeData.title" placeholder="e.g. Senior Counsel Court Appearance" />
+          </div>
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Fee Type</label>
+              <select class="form-clean-select" [(ngModel)]="feeData.feeType">
+                <option value="APPEARANCE_FEE">Appearance Fee</option>
+                <option value="CONSULTATION_FEE">Consultation / Conference</option>
+                <option value="DRAFTING_FEE">Drafting Plaint / Answer</option>
+                <option value="RETAINER">Retainer Advance</option>
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Amount (LKR) <span class="required-star">*</span></label>
+              <input type="number" class="form-clean-input font-bold" [(ngModel)]="feeData.amount" />
+            </div>
+          </div>
+          <div class="form-clean-group">
+            <label class="form-clean-label">Date</label>
+            <input type="date" class="form-clean-input" [(ngModel)]="feeData.date" />
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showFeeModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveFee()">Save Fee Entry</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 9: LOG EXPENSE -->
+  @if (showExpenseModal()) {
+    <div class="modal-clean-backdrop" (click)="showExpenseModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Log Disbursement / Stamp Expense</h3>
+          <button type="button" class="btn-close-modal" (click)="showExpenseModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Expense Description <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="expenseData.title" placeholder="e.g. Supreme Court Stamp Duty & Proxy Stamps" />
+          </div>
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Expense Category <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="expenseData.category">
+                <option value="STAMP_FEE">Court Stamps / Stamp Duty</option>
+                <option value="FILING_FEE">Registrar Filing Fee</option>
+                <option value="TRANSLATION">Translation / Sworn Cert</option>
+                <option value="PROCESS_SERVER">Fiscal & Process Server Fee</option>
+                <option value="TRAVEL">Court Travel & Lodging</option>
+                <option value="OTHER">Other Disbursement</option>
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Amount (LKR) <span class="required-star">*</span></label>
+              <input type="number" class="form-clean-input font-bold" [(ngModel)]="expenseData.amount" />
+            </div>
+          </div>
+          <div class="form-clean-grid-2">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Receipt / Voucher Ref</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="expenseData.receiptRef" placeholder="e.g. VCH-00912" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Date</label>
+              <input type="date" class="form-clean-input" [(ngModel)]="expenseData.date" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showExpenseModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveExpense()">Save Expense</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 10: GENERATE INVOICE -->
+  @if (showInvoiceModal()) {
+    <div class="modal-clean-backdrop" (click)="showInvoiceModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Generate Official Client Invoice</h3>
+          <button type="button" class="btn-close-modal" (click)="showInvoiceModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Item / Service Description <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="invoiceData.description" placeholder="e.g. Legal Representation & Court Appearances" />
+          </div>
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Invoice Amount (LKR) <span class="required-star">*</span></label>
+              <input type="number" class="form-clean-input font-bold" [(ngModel)]="invoiceData.amount" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Payment Due Date</label>
+              <input type="date" class="form-clean-input" [(ngModel)]="invoiceData.dueDate" />
+            </div>
+          </div>
+          <div class="form-clean-group">
+            <label class="form-clean-label">Invoice Notes / Bank Instructions</label>
+            <textarea class="form-clean-textarea" [(ngModel)]="invoiceData.notes"></textarea>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showInvoiceModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveInvoice()">Issue Official Invoice</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL 11: LOG COMMUNICATION -->
+  @if (showNewCommModal()) {
+    <div class="modal-clean-backdrop" (click)="showNewCommModal.set(false)">
+      <div class="modal-window-clean" (click)="$event.stopPropagation()">
+        <div class="modal-clean-header">
+          <h3 class="modal-clean-title">Log Correspondence / Client Note</h3>
+          <button type="button" class="btn-close-modal" (click)="showNewCommModal.set(false)">✕</button>
+        </div>
+        <div class="modal-clean-body">
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Channel Type</label>
+              <select class="form-clean-select" [(ngModel)]="commData.type">
+                <option value="PHONE_CALL">Phone Call</option>
+                <option value="EMAIL">Email</option>
+                <option value="WHATSAPP">WhatsApp / SMS</option>
+                <option value="IN_PERSON">In-Person Meeting / Conference</option>
+                <option value="LETTER">Formal Letter / Letter of Demand</option>
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Direction</label>
+              <select class="form-clean-select" [(ngModel)]="commData.direction">
+                <option value="OUTBOUND">Outbound (To Client/Counsel)</option>
+                <option value="INBOUND">Inbound (From Client/Counsel)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Subject / Heading <span class="required-star">*</span></label>
+            <input type="text" class="form-clean-input" [(ngModel)]="commData.subject" placeholder="e.g. Conference call regarding survey report" />
+          </div>
+          <div class="form-clean-group">
+            <label class="form-clean-label">Minutes / Notes <span class="required-star">*</span></label>
+            <textarea class="form-clean-textarea" [(ngModel)]="commData.content" placeholder="Summary of discussion and client instructions..."></textarea>
+          </div>
+        </div>
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showNewCommModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveCommunication()">Save Log</button>
+        </div>
+      </div>
+    </div>
+  }
+}

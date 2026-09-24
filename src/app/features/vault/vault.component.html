@@ -1,0 +1,328 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Original Physical Document Safe & Custody Vault</h1>
+      </div>
+      <p class="page-subtitle">Master custody ledger for original title deeds, surveyor plans, powers of attorney, and certificates</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-primary-action" (click)="resetFilters()" id="btn-view-vault">
+        <app-icon name="shield" [size]="16" [strokeWidth]="2.2"></app-icon>
+        <span>Safe Custody Register</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="folder-open" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Physical Documents</span>
+        <div class="mini-kpi-val">{{ totalDocsCount() }} <span class="mini-kpi-sub">Total Registered</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="statusFilter.set('IN_CUSTODY')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="shield" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">In Safe Custody</span>
+        <div class="mini-kpi-val">{{ inCustodyCount() }} <span class="mini-kpi-sub">In Vault</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="typeFilter.set('TITLE_DEED')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="file-text" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Title Deeds & Plans</span>
+        <div class="mini-kpi-val">{{ deedsCount() }} <span class="mini-kpi-sub">Property Deeds</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="statusFilter.set('RETURNED')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="check" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Returned to Clients</span>
+        <div class="mini-kpi-val">{{ returnedCount() }} <span class="mini-kpi-sub">Released</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">{{ activeFilterCount() }}</span>
+      </div>
+
+      <!-- Custody Status Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="statusFilter()" 
+          (ngModelChange)="statusFilter.set($event)"
+          id="filter-vault-status-select"
+        >
+          <option value="">All Custody Statuses</option>
+          <option value="IN_CUSTODY">In Safe Custody</option>
+          <option value="RETURNED">Returned / Released</option>
+          <option value="IN_COURT">Produced in Court</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Document Type Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select 
+          class="capsule-select" 
+          [ngModel]="typeFilter()" 
+          (ngModelChange)="typeFilter.set($event)"
+          id="filter-vault-type-select"
+        >
+          <option value="">All Document Types</option>
+          <option value="TITLE_DEED">Original Title Deed</option>
+          <option value="SURVEY_PLAN">Surveyor Plan</option>
+          <option value="POWER_OF_ATTORNEY">Power of Attorney</option>
+          <option value="TESTAMENTARY">Last Will / Testamentary</option>
+          <option value="CERTIFICATE">Official Certificate</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="btn-clear-filters" (click)="resetFilters()" title="Reset All Filters">
+          <span>✕ Reset</span>
+        </button>
+      }
+    </div>
+
+    <!-- Search Input on Right -->
+    <div class="filter-right-search">
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="15" [strokeWidth]="2" class="search-icon-svg"></app-icon>
+        <input 
+          type="text" 
+          class="crm-search-input" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search document title, ref no, client, locker..."
+          id="vault-search-box"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="btn-clear-search" (click)="searchQuery.set('')">✕</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. SOLID DARK MASTER VAULT CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button type="button" class="tab-pill-btn active" id="tab-all-vault-btn">
+          <app-icon name="shield" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>All Physical Vault Records</span>
+          <span class="tab-count-badge highlight-pill">
+            {{ filteredDocs().length }}
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">
+          Showing {{ filteredDocs().length }} of {{ physicalDocs().length }} Vault Items
+        </span>
+      </div>
+    </div>
+
+    <!-- VAULT DATAGRID -->
+    <div class="matters-table-container">
+      <table class="finnova-matters-table">
+        <thead>
+          <tr>
+            <th>Document Title</th>
+            <th style="width: 170px;">Type & Ref No.</th>
+            <th style="width: 140px;">Related Matter</th>
+            <th>Received From / Client</th>
+            <th style="width: 190px;">Storage Location</th>
+            <th style="width: 135px;">Custody Status</th>
+            <th style="width: 130px;">Date Received</th>
+            <th style="width: 155px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredDocs().length === 0) {
+            <tr>
+              <td colspan="8" class="empty-state-cell">
+                <div class="empty-state-wrap">
+                  <div class="empty-icon-box">
+                    <app-icon name="shield" [size]="32" [strokeWidth]="1.8"></app-icon>
+                  </div>
+                  <div class="empty-text-title">No physical vault records found</div>
+                  <div class="empty-text-sub">Try changing your search filters</div>
+                </div>
+              </td>
+            </tr>
+          }
+
+          @for (p of filteredDocs(); track p.id) {
+            <tr class="matter-row">
+              <!-- Title -->
+              <td>
+                <div class="doc-title-cell">
+                  <span class="doc-main-title">📜 {{ p.title }}</span>
+                  <span class="doc-accepted-sub">Accepted by: {{ p.receivedBy?.fullName || 'Chambers Custodian' }}</span>
+                </div>
+              </td>
+
+              <!-- Type & Ref -->
+              <td>
+                <span class="doc-type-chip">{{ p.documentType?.replace('_', ' ') }}</span>
+                <div class="doc-ref-mono font-mono">{{ p.referenceNo || 'REF-N/A' }}</div>
+              </td>
+
+              <!-- Matter -->
+              <td>
+                @if (p.matter) {
+                  <div class="matter-link-cell">
+                    <a [routerLink]="['/matters', p.matter.id]" class="matter-main-title">
+                      {{ p.matter.matterNumber }}
+                    </a>
+                  </div>
+                } @else {
+                  <span class="general-chip">General Custody</span>
+                }
+              </td>
+
+              <!-- Received From -->
+              <td>
+                <span class="received-from-name">{{ p.receivedFrom || 'Client Representative' }}</span>
+              </td>
+
+              <!-- Location -->
+              <td>
+                <span class="location-badge">📍 {{ p.physicalLocation || 'Safe Vault Locker #01' }}</span>
+              </td>
+
+              <!-- Status -->
+              <td>
+                <span class="status-chip" [ngClass]="p.status === 'IN_CUSTODY' ? 'status-completed' : 'status-pending'">
+                  {{ p.status === 'IN_CUSTODY' ? 'IN CUSTODY' : p.status }}
+                </span>
+              </td>
+
+              <!-- Date -->
+              <td>
+                <span class="date-text">{{ p.receivedDate | date:'mediumDate' }}</span>
+              </td>
+
+              <!-- Action -->
+              <td style="text-align: right;">
+                @if (p.status === 'IN_CUSTODY') {
+                  <button type="button" class="btn-return-doc" (click)="openReturnModal(p)">
+                    <span>Hand Over / Return</span>
+                  </button>
+                } @else {
+                  <div class="returned-sub-text">Returned to: {{ p.returnedTo || 'Client' }}</div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. RETURN PHYSICAL DOCUMENT MODAL (Dual-Theme Compliant)
+       ========================================================================= -->
+  @if (returningDoc()) {
+    <div class="modal-clean-backdrop" (click)="closeReturnModal()">
+      <div class="modal-window-clean return-modal-window" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-header-left">
+            <div class="modal-header-icon-box icon-emerald">
+              <app-icon name="shield" [size]="22" [strokeWidth]="2.2"></app-icon>
+            </div>
+            <div>
+              <h2 class="modal-clean-title">Return Original Physical Document</h2>
+              <p class="modal-clean-sub">Release deed from safe custody to client or court registrar</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeReturnModal()" title="Close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-clean-body">
+          <div class="doc-summary-box">
+            <span class="summary-label">Document Title</span>
+            <strong class="summary-val text-gold">📜 {{ returningDoc()?.title }}</strong>
+            <span class="summary-sub">Ref: {{ returningDoc()?.referenceNo || 'N/A' }} • Location: {{ returningDoc()?.physicalLocation }}</span>
+          </div>
+
+          <div class="clean-form-grid mt-4">
+            <!-- Recipient Name -->
+            <div class="form-group full-width">
+              <label class="clean-label">Recipient Full Name / Title <span class="text-rose">*</span></label>
+              <input 
+                type="text" 
+                class="clean-input" 
+                [(ngModel)]="recipientName" 
+                placeholder="e.g. Dr. Kanchana Wijesinghe / Registrar District Court" 
+                required 
+              />
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group full-width">
+              <label class="clean-label">Handover Purpose / Acknowledgement Notes</label>
+              <textarea 
+                class="clean-textarea" 
+                rows="3" 
+                [(ngModel)]="returnNotes" 
+                placeholder="Acknowledgment receipt signed and filed..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-clean-secondary" (click)="closeReturnModal()">Cancel</button>
+          <button 
+            type="button" 
+            class="btn-primary-action" 
+            [disabled]="!recipientName.trim() || isSubmitting()" 
+            (click)="submitReturn()"
+          >
+            <span>{{ isSubmitting() ? 'Releasing...' : '✓ Confirm Handover & Update Ledger' }}</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

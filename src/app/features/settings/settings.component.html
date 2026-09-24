@@ -1,0 +1,286 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Administration & Security Audit Hub</h1>
+      </div>
+      <p class="page-subtitle">Chambers configuration, user management, RBAC matrix, and immutable audit logs</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-primary-action" (click)="activeTab.set('users')" id="btn-user-mgmt">
+        <app-icon name="users" [size]="16" [strokeWidth]="2.2"></app-icon>
+        <span>Chambers Staff & Roles</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="activeTab.set('users')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="users" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Active User Accounts</span>
+        <div class="mini-kpi-val">{{ totalUsersCount() }} <span class="mini-kpi-sub">Users</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('roles')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="shield" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">System RBAC Roles</span>
+        <div class="mini-kpi-val">{{ totalRolesCount() }} <span class="mini-kpi-sub">Roles</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('roles')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="lock" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Permission Grants</span>
+        <div class="mini-kpi-val">{{ totalPermissionsCount() }} <span class="mini-kpi-sub">Grants</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('audit')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="file-text" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Security Audit Logs</span>
+        <div class="mini-kpi-val">{{ totalAuditLogsCount() }} <span class="mini-kpi-sub">Events</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. SOLID DARK MASTER SETTINGS CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'users'" 
+          (click)="activeTab.set('users')"
+          id="tab-users-btn"
+        >
+          <app-icon name="users" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>User Accounts</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'users'">
+            {{ users().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'roles'" 
+          (click)="activeTab.set('roles')"
+          id="tab-roles-btn"
+        >
+          <app-icon name="shield" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>RBAC Roles & Permissions Matrix</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'roles'">
+            {{ roles().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'audit'" 
+          (click)="activeTab.set('audit')"
+          id="tab-audit-btn"
+        >
+          <app-icon name="file-text" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Security Audit Logs</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'audit'">
+            {{ auditLogs().length }}
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">
+          @if (activeTab() === 'users') { Showing {{ filteredUsers().length }} User Accounts }
+          @if (activeTab() === 'roles') { Showing {{ roles().length }} RBAC Roles }
+          @if (activeTab() === 'audit') { Showing {{ filteredLogs().length }} Audit Events }
+        </span>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 1: USER ACCOUNTS TABLE
+         ========================================================================= -->
+    @if (activeTab() === 'users') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email Address</th>
+              <th style="width: 140px;">Chambers Role</th>
+              <th style="width: 150px;">Contact Phone</th>
+              <th style="width: 120px;">Status</th>
+              <th style="width: 140px; text-align: right;">Created Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of filteredUsers(); track u.id) {
+              <tr class="matter-row">
+                <!-- Name with Avatar -->
+                <td>
+                  <div class="counsel-cell">
+                    <div class="counsel-avatar">
+                      {{ (u.fullName || 'US').substring(0, 2).toUpperCase() }}
+                    </div>
+                    <span class="counsel-name-bold">{{ u.fullName }}</span>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td>
+                  <span class="user-email-text font-mono">{{ u.email }}</span>
+                </td>
+
+                <!-- Role -->
+                <td>
+                  <span class="role-chip" [ngClass]="{
+                    'role-partner': u.role === 'PARTNER' || u.role === 'ADMIN',
+                    'role-attorney': u.role === 'ATTORNEY',
+                    'role-junior': u.role === 'JUNIOR',
+                    'role-staff': u.role === 'SECRETARY' || u.role === 'ACCOUNTS'
+                  }">{{ u.role }}</span>
+                </td>
+
+                <!-- Phone -->
+                <td>
+                  <span class="phone-text">{{ u.phone || '011-2345678' }}</span>
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="status-chip status-completed">{{ u.status || 'ACTIVE' }}</span>
+                </td>
+
+                <!-- Date -->
+                <td style="text-align: right;">
+                  <span class="date-text">{{ u.createdAt | date:'mediumDate' }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- =========================================================================
+         TAB 2: RBAC ROLES & PERMISSIONS MATRIX
+         ========================================================================= -->
+    @if (activeTab() === 'roles') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th style="width: 130px;">Role Code</th>
+              <th style="width: 180px;">Role Name</th>
+              <th>Role Description</th>
+              <th>Granted Permission Codes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of roles(); track r.id) {
+              <tr class="matter-row">
+                <!-- Code -->
+                <td>
+                  <span class="docket-num-badge font-mono">{{ r.code }}</span>
+                </td>
+
+                <!-- Name -->
+                <td>
+                  <span class="role-name-bold">{{ r.name }}</span>
+                </td>
+
+                <!-- Description -->
+                <td>
+                  <span class="role-desc-text">{{ r.description }}</span>
+                </td>
+
+                <!-- Permissions -->
+                <td>
+                  <div class="permission-chips-grid">
+                    @for (rp of r.permissions; track rp.id) {
+                      <span class="perm-chip font-mono">{{ rp.permission?.code }}</span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- =========================================================================
+         TAB 3: SECURITY AUDIT LOGS
+         ========================================================================= -->
+    @if (activeTab() === 'audit') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th style="width: 175px;">Timestamp</th>
+              <th style="width: 150px;">Action Executed</th>
+              <th style="width: 140px;">Entity Type</th>
+              <th style="width: 170px;">Operator / User</th>
+              <th>Audit Change Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of filteredLogs(); track log.id) {
+              <tr class="matter-row">
+                <!-- Timestamp -->
+                <td>
+                  <span class="timestamp-text font-mono">{{ log.createdAt | date:'medium' }}</span>
+                </td>
+
+                <!-- Action -->
+                <td>
+                  <span class="action-chip font-mono">{{ log.action }}</span>
+                </td>
+
+                <!-- Entity -->
+                <td>
+                  <span class="entity-chip font-mono">{{ log.entityType }}</span>
+                </td>
+
+                <!-- User -->
+                <td>
+                  <span class="operator-name-bold">{{ log.user?.fullName || 'Chambers System' }}</span>
+                </td>
+
+                <!-- Details -->
+                <td>
+                  <span class="log-details-text">{{ log.details }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

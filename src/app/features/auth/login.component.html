@@ -1,0 +1,122 @@
+<div class="login-wrapper">
+  <div class="login-decor-circle-1"></div>
+  <div class="login-decor-circle-2"></div>
+
+  <!-- THEME TOGGLE (TOP RIGHT) -->
+  <div class="login-theme-corner">
+    <button class="btn-theme-toggle" (click)="themeService.toggleTheme()">
+      @if (themeService.currentTheme() === 'dark') {
+        <span>☀️ Light Mode</span>
+      } @else {
+        <span>🌙 Dark Mode</span>
+      }
+    </button>
+  </div>
+  
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-badge icon-gold">
+        <span class="brand-icon">⚖️</span>
+      </div>
+      <h1 class="brand-title">LPMS</h1>
+      <p class="brand-subtitle">Legal Practice & Case Management System</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-danger">
+        <span class="alert-icon text-lg">⚠️</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label class="form-label">Email Address / Chambers ID</label>
+        <input 
+          type="email" 
+          class="form-input text-base" 
+          [(ngModel)]="email" 
+          name="email" 
+          placeholder="e.g. admin@lpms.law" 
+          required
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input 
+          type="password" 
+          class="form-input text-base" 
+          [(ngModel)]="password" 
+          name="password" 
+          placeholder="••••••••" 
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn btn-primary w-full btn-lg"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span>Authenticating...</span>
+        } @else {
+          <span>🔐 Sign In to Chambers Portal →</span>
+        }
+      </button>
+    </form>
+
+    <div class="demo-profiles-section">
+      <div class="demo-divider">
+        <span>One-Click Quick Login Profiles (Password: Admin@123)</span>
+      </div>
+      
+      <div class="demo-grid">
+        <button type="button" class="demo-btn" (click)="quickLogin('admin@lpms.law')">
+          <div class="demo-btn-top">
+            <span class="role-badge admin">👑 Admin</span>
+          </div>
+          <span class="demo-name">Rohan Perera, PC</span>
+        </button>
+
+        <button type="button" class="demo-btn" (click)="quickLogin('partner@lpms.law')">
+          <div class="demo-btn-top">
+            <span class="role-badge partner">⭐ Partner</span>
+          </div>
+          <span class="demo-name">Devinda W., PC</span>
+        </button>
+
+        <button type="button" class="demo-btn" (click)="quickLogin('attorney@lpms.law')">
+          <div class="demo-btn-top">
+            <span class="role-badge attorney">⚖️ Lead Counsel</span>
+          </div>
+          <span class="demo-name">Dilshan G., AAL</span>
+        </button>
+
+        <button type="button" class="demo-btn" (click)="quickLogin('junior@lpms.law')">
+          <div class="demo-btn-top">
+            <span class="role-badge junior">🎓 Junior</span>
+          </div>
+          <span class="demo-name">Shanuki Silva</span>
+        </button>
+
+        <button type="button" class="demo-btn" (click)="quickLogin('secretary@lpms.law')">
+          <div class="demo-btn-top">
+            <span class="role-badge secretary">📋 Secretary</span>
+          </div>
+          <span class="demo-name">Nimna Fernando</span>
+        </button>
+
+        <button type="button" class="demo-btn" (click)="quickLogin('accounts@lpms.law')">
+          <div class="demo-btn-top">
+            <span class="role-badge accounts">💵 Accounts</span>
+          </div>
+          <span class="demo-name">Kamal Jayasinghe</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

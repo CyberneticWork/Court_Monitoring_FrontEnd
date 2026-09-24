@@ -1,0 +1,698 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle + Action CTA Button)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Billing, Invoices & Collections Ledger</h1>
+      </div>
+      <p class="page-subtitle">Professional fees, disbursements, invoice generation, and official receipts</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-create-invoice" (click)="openNewInvoiceModal()" id="btn-create-invoice">
+        <span class="btn-plus-sym">+</span>
+        <span>Generate Client Invoice</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (4 Mini KPI Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card" (click)="activeTab.set('invoices'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="file-text" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Total Invoiced</span>
+        <div class="mini-kpi-val">LKR {{ totalInvoicedSum() | number:'1.0-0' }} <span class="mini-kpi-sub">Fees Billed</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('invoices'); statusFilter.set('PAID')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="check" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Collections Paid</span>
+        <div class="mini-kpi-val">LKR {{ totalPaidSum() | number:'1.0-0' }} <span class="mini-kpi-sub">Settled</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('invoices'); statusFilter.set('ISSUED')" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="alert-circle" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Outstanding Balance</span>
+        <div class="mini-kpi-val">LKR {{ totalOutstandingSum() | number:'1.0-0' }} <span class="mini-kpi-sub">Uncollected</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card" (click)="activeTab.set('payments'); resetFilters()" style="cursor: pointer;">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="tasks" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Official Receipts</span>
+        <div class="mini-kpi-val">{{ payments().length }} <span class="mini-kpi-sub">Receipts Issued</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">{{ activeFilterCount() }}</span>
+      </div>
+
+      <!-- Invoice Status Filter Capsule -->
+      @if (activeTab() === 'invoices') {
+        <div class="filter-dropdown-capsule">
+          <select 
+            class="capsule-select" 
+            [ngModel]="statusFilter()" 
+            (ngModelChange)="statusFilter.set($event)"
+            id="filter-invoice-status-select"
+          >
+            <option value="">All Invoice Statuses</option>
+            <option value="PAID">Paid / Settled</option>
+            <option value="PARTIALLY_PAID">Partially Paid</option>
+            <option value="ISSUED">Issued / Pending</option>
+            <option value="DRAFT">Draft</option>
+          </select>
+          <span class="capsule-chevron">▾</span>
+        </div>
+      }
+
+      <!-- Payment Method Filter Capsule -->
+      @if (activeTab() === 'payments') {
+        <div class="filter-dropdown-capsule">
+          <select 
+            class="capsule-select" 
+            [ngModel]="paymentMethodFilter()" 
+            (ngModelChange)="paymentMethodFilter.set($event)"
+            id="filter-payment-method-select"
+          >
+            <option value="">All Payment Methods</option>
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="CASH">Cash</option>
+            <option value="CHEQUE">Cheque</option>
+            <option value="CREDIT_CARD">Credit Card / Online</option>
+          </select>
+          <span class="capsule-chevron">▾</span>
+        </div>
+      }
+
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="btn-clear-filters" (click)="resetFilters()" title="Reset All Filters">
+          <span>✕ Reset</span>
+        </button>
+      }
+    </div>
+
+    <!-- Search Input on Right -->
+    <div class="filter-right-search">
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="15" [strokeWidth]="2" class="search-icon-svg"></app-icon>
+        <input 
+          type="text" 
+          class="crm-search-input" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search invoice no, client, matter, receipt..."
+          id="billing-search-box"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="btn-clear-search" (click)="searchQuery.set('')">✕</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. SOLID DARK MASTER FINANCE CONTAINER (#141923 Theme Parity)
+       ========================================================================= -->
+  <div class="dark-master-detail-container">
+    <!-- Top Pill Tabs -->
+    <div class="master-detail-top-tabs">
+      <div class="tabs-center-pills">
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'invoices'" 
+          (click)="activeTab.set('invoices')"
+          id="tab-invoices-btn"
+        >
+          <app-icon name="file-text" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Client Fee Invoices</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'invoices'">
+            {{ filteredInvoices().length }}
+          </span>
+        </button>
+
+        <button 
+          type="button" 
+          class="tab-pill-btn" 
+          [class.active]="activeTab() === 'payments'" 
+          (click)="activeTab.set('payments')"
+          id="tab-payments-btn"
+        >
+          <app-icon name="credit-card" [size]="16" [strokeWidth]="2.2"></app-icon>
+          <span>Payments & Official Receipts</span>
+          <span class="tab-count-badge" [class.highlight-pill]="activeTab() === 'payments'">
+            {{ filteredPayments().length }}
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-right-summary">
+        <span class="view-indicator-text">
+          @if (activeTab() === 'invoices') { Showing {{ filteredInvoices().length }} of {{ invoices().length }} Invoices }
+          @if (activeTab() === 'payments') { Showing {{ filteredPayments().length }} of {{ payments().length }} Payment Transactions }
+        </span>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 1: INVOICES DATAGRID
+         ========================================================================= -->
+    @if (activeTab() === 'invoices') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th style="width: 140px;">Invoice No.</th>
+              <th>Client Name</th>
+              <th>Related Matter</th>
+              <th style="width: 145px;">Issue / Due Date</th>
+              <th style="width: 135px;">Total Billed</th>
+              <th style="width: 130px;">Amount Paid</th>
+              <th style="width: 135px;">Balance Due</th>
+              <th style="width: 125px;">Status</th>
+              <th style="width: 155px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredInvoices().length === 0) {
+              <tr>
+                <td colspan="9" class="empty-state-cell">
+                  <div class="empty-state-wrap">
+                    <div class="empty-icon-box">
+                      <app-icon name="file-text" [size]="32" [strokeWidth]="1.8"></app-icon>
+                    </div>
+                    <div class="empty-text-title">No client invoices found</div>
+                    <div class="empty-text-sub">Generate a new invoice or adjust your active filters</div>
+                    @if (activeFilterCount() > 0) {
+                      <button type="button" class="btn-clear-filters mt-3" (click)="resetFilters()">
+                        Reset All Filters
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (inv of filteredInvoices(); track inv.id) {
+              <tr class="matter-row">
+                <!-- Invoice No. -->
+                <td>
+                  <span class="docket-num-badge font-mono">{{ inv.invoiceNumber }}</span>
+                </td>
+
+                <!-- Client Name -->
+                <td>
+                  <div class="client-info-cell">
+                    <span class="client-name-bold">{{ inv.client?.name || 'Registered Client' }}</span>
+                    @if (inv.client?.phone) {
+                      <span class="client-sub-contact">{{ inv.client?.phone }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Matter Reference -->
+                <td>
+                  @if (inv.matter) {
+                    <div class="matter-link-cell">
+                      <a [routerLink]="['/matters', inv.matter.id]" class="matter-main-title">
+                        {{ inv.matter.title }}
+                      </a>
+                      <div class="matter-num-sub font-mono">{{ inv.matter.matterNumber }}</div>
+                    </div>
+                  } @else {
+                    <span class="general-chip">General Retainer</span>
+                  }
+                </td>
+
+                <!-- Dates -->
+                <td>
+                  <div class="invoice-date-cell">
+                    <div class="issue-date-text">{{ inv.issueDate | date:'mediumDate' }}</div>
+                    @if (isPastDue(inv.dueDate, inv.status)) {
+                      <div class="overdue-tag mt-1">
+                        <span class="overdue-sub-label">DUE: {{ inv.dueDate | date:'mediumDate' }}</span>
+                      </div>
+                    } @else {
+                      <div class="due-date-sub">Due: {{ inv.dueDate | date:'mediumDate' }}</div>
+                    }
+                  </div>
+                </td>
+
+                <!-- Total Amount -->
+                <td>
+                  <span class="total-amount-bold font-mono">LKR {{ inv.totalAmount | number:'1.2-2' }}</span>
+                </td>
+
+                <!-- Paid Amount -->
+                <td>
+                  <span class="paid-amount-emerald font-mono">LKR {{ inv.paidAmount | number:'1.2-2' }}</span>
+                </td>
+
+                <!-- Balance Due -->
+                <td>
+                  @if (inv.balanceDue > 0) {
+                    <span class="balance-due-rose font-mono">LKR {{ inv.balanceDue | number:'1.2-2' }}</span>
+                  } @else {
+                    <span class="settled-zero-text font-mono">LKR 0.00</span>
+                  }
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="status-chip" [ngClass]="{
+                    'status-completed': inv.status === 'PAID',
+                    'status-calling': inv.status === 'PARTIALLY_PAID',
+                    'status-scheduled': inv.status === 'ISSUED',
+                    'status-pending': inv.status === 'DRAFT'
+                  }">
+                    {{ inv.status === 'PARTIALLY_PAID' ? 'PARTIAL' : inv.status }}
+                  </span>
+                </td>
+
+                <!-- Action -->
+                <td style="text-align: right;">
+                  @if (inv.status !== 'PAID') {
+                    <button 
+                      type="button" 
+                      class="btn-record-payment" 
+                      (click)="openPaymentModal(inv)"
+                      title="Record Payment & Generate Receipt"
+                    >
+                      <app-icon name="credit-card" [size]="13" [strokeWidth]="2.2"></app-icon>
+                      <span>Record Pay</span>
+                    </button>
+                  } @else {
+                    <span class="completed-checkmark-chip">✓ Settled</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- =========================================================================
+         TAB 2: PAYMENTS & OFFICIAL RECEIPTS DATAGRID
+         ========================================================================= -->
+    @if (activeTab() === 'payments') {
+      <div class="matters-table-container">
+        <table class="finnova-matters-table">
+          <thead>
+            <tr>
+              <th style="width: 140px;">Payment No.</th>
+              <th style="width: 155px;">Official Receipt No.</th>
+              <th>Client Name</th>
+              <th style="width: 135px;">Invoice Ref</th>
+              <th style="width: 140px;">Payment Method</th>
+              <th style="width: 145px;">Amount Settled</th>
+              <th style="width: 130px;">Payment Date</th>
+              <th style="width: 140px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredPayments().length === 0) {
+              <tr>
+                <td colspan="8" class="empty-state-cell">
+                  <div class="empty-state-wrap">
+                    <div class="empty-icon-box">
+                      <app-icon name="credit-card" [size]="32" [strokeWidth]="1.8"></app-icon>
+                    </div>
+                    <div class="empty-text-title">No payment records found</div>
+                    <div class="empty-text-sub">Recorded client payments and official receipts will appear here</div>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (p of filteredPayments(); track p.id) {
+              <tr class="matter-row">
+                <!-- Payment No -->
+                <td>
+                  <span class="docket-num-badge font-mono">{{ p.paymentNumber }}</span>
+                </td>
+
+                <!-- Receipt No -->
+                <td>
+                  <span class="receipt-num-badge font-mono">{{ p.receipt?.receiptNumber || 'REC-OFFICIAL' }}</span>
+                </td>
+
+                <!-- Client -->
+                <td>
+                  <span class="client-name-bold">{{ p.client?.name || 'Registered Client' }}</span>
+                </td>
+
+                <!-- Invoice Ref -->
+                <td>
+                  <span class="invoice-ref-badge font-mono">{{ p.invoice?.invoiceNumber }}</span>
+                </td>
+
+                <!-- Method -->
+                <td>
+                  <span class="method-chip">{{ p.paymentMethod?.replace('_', ' ') }}</span>
+                </td>
+
+                <!-- Amount -->
+                <td>
+                  <span class="paid-amount-emerald font-mono text-base font-bold">LKR {{ p.amount | number:'1.2-2' }}</span>
+                </td>
+
+                <!-- Date -->
+                <td>
+                  <span class="payment-date-text">{{ p.paymentDate | date:'mediumDate' }}</span>
+                </td>
+
+                <!-- Action -->
+                <td style="text-align: right;">
+                  @if (p.receipt) {
+                    <button type="button" class="btn-view-receipt" (click)="viewReceipt(p)">
+                      <app-icon name="file-text" [size]="13" [strokeWidth]="2.2"></app-icon>
+                      <span>Receipt</span>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- =========================================================================
+       5. GENERATE NEW INVOICE MODAL (Dual-Theme Compliant)
+       ========================================================================= -->
+  @if (showInvoiceModal()) {
+    <div class="modal-clean-backdrop" (click)="closeInvoiceModal()">
+      <div class="modal-window-clean invoice-modal-window" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-header-left">
+            <div class="modal-header-icon-box icon-indigo">
+              <app-icon name="file-text" [size]="22" [strokeWidth]="2.2"></app-icon>
+            </div>
+            <div>
+              <h2 class="modal-clean-title">Generate Client Fee Invoice</h2>
+              <p class="modal-clean-sub">Itemize counsel appearance fees, drafting disbursements, and retainer charges</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeInvoiceModal()" title="Close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-clean-body">
+          <div class="clean-form-grid">
+            <!-- Matter Selector -->
+            <div class="form-group">
+              <label class="clean-label">Legal Matter & Client <span class="text-rose">*</span></label>
+              <select 
+                class="clean-select" 
+                [(ngModel)]="newInvoiceData.matterId" 
+                (ngModelChange)="onMatterSelect($event)"
+              >
+                <option value="">-- Select Legal Matter --</option>
+                @for (m of matters(); track m.id) {
+                  <option [value]="m.id">{{ m.matterNumber }} - {{ m.title }} ({{ m.client?.name }})</option>
+                }
+              </select>
+            </div>
+
+            <!-- Due Date -->
+            <div class="form-group">
+              <label class="clean-label">Payment Due Date <span class="text-rose">*</span></label>
+              <input type="date" class="clean-input" [(ngModel)]="newInvoiceData.dueDate" />
+            </div>
+          </div>
+
+          <!-- Line Items -->
+          <div class="invoice-items-section mt-4">
+            <div class="items-header-row">
+              <span class="items-title">Itemized Fees & Disbursements</span>
+              <button type="button" class="btn-add-item" (click)="addInvoiceItem()">+ Add Line Item</button>
+            </div>
+
+            <div class="items-list-wrap mt-2">
+              @for (item of newInvoiceData.items; track $index) {
+                <div class="line-item-row">
+                  <div class="item-desc-wrap">
+                    <input 
+                      type="text" 
+                      class="clean-input" 
+                      [(ngModel)]="item.description" 
+                      placeholder="e.g. Senior Counsel Court Appearance / Drafting Brief" 
+                    />
+                  </div>
+                  <div class="item-amount-wrap">
+                    <input 
+                      type="number" 
+                      class="clean-input font-mono" 
+                      [(ngModel)]="item.unitPrice" 
+                      placeholder="Amount (LKR)" 
+                    />
+                  </div>
+                  @if (newInvoiceData.items.length > 1) {
+                    <button type="button" class="btn-remove-item" (click)="removeInvoiceItem($index)" title="Remove Item">✕</button>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Total Invoice Box -->
+            <div class="invoice-total-card mt-4">
+              <span class="total-card-label">Total Invoice Amount:</span>
+              <span class="total-card-val font-mono">LKR {{ calcTotal() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-clean-secondary" (click)="closeInvoiceModal()">Cancel</button>
+          <button 
+            type="button" 
+            class="btn-primary-action" 
+            [disabled]="!newInvoiceData.matterId || calcTotal() <= 0 || isSubmitting()" 
+            (click)="saveInvoice()"
+          >
+            <span>{{ isSubmitting() ? 'Issuing...' : 'Issue Official Invoice' }}</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- =========================================================================
+       6. RECORD CLIENT PAYMENT MODAL (Dual-Theme Compliant)
+       ========================================================================= -->
+  @if (recordingPaymentInvoice()) {
+    <div class="modal-clean-backdrop" (click)="closePaymentModal()">
+      <div class="modal-window-clean payment-modal-window" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-header-left">
+            <div class="modal-header-icon-box icon-emerald">
+              <app-icon name="credit-card" [size]="22" [strokeWidth]="2.2"></app-icon>
+            </div>
+            <div>
+              <h2 class="modal-clean-title">Record Client Fee Payment</h2>
+              <p class="modal-clean-sub">Receive payment against Invoice {{ recordingPaymentInvoice()?.invoiceNumber }}</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closePaymentModal()" title="Close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-clean-body">
+          <div class="invoice-settlement-summary">
+            <div class="summary-box">
+              <span class="summary-label">Invoice Number</span>
+              <span class="summary-val font-mono text-gold">{{ recordingPaymentInvoice()?.invoiceNumber }}</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">Client Name</span>
+              <span class="summary-val text-bright">{{ recordingPaymentInvoice()?.client?.name }}</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">Outstanding Balance</span>
+              <span class="summary-val font-mono text-rose">LKR {{ recordingPaymentInvoice()?.balanceDue | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="clean-form-grid mt-4">
+            <!-- Payment Amount -->
+            <div class="form-group">
+              <label class="clean-label">Payment Amount (LKR) <span class="text-rose">*</span></label>
+              <input 
+                type="number" 
+                class="clean-input font-mono text-lg font-bold" 
+                [(ngModel)]="paymentForm.amount" 
+                placeholder="Amount in LKR" 
+                required 
+              />
+            </div>
+
+            <!-- Payment Method -->
+            <div class="form-group">
+              <label class="clean-label">Payment Method <span class="text-rose">*</span></label>
+              <select class="clean-select" [(ngModel)]="paymentForm.paymentMethod">
+                <option value="BANK_TRANSFER">Bank Transfer (Direct Deposit)</option>
+                <option value="CASH">Cash Payment</option>
+                <option value="CHEQUE">Bank Cheque</option>
+                <option value="CREDIT_CARD">Credit / Debit Card</option>
+              </select>
+            </div>
+
+            <!-- Transaction Ref -->
+            <div class="form-group">
+              <label class="clean-label">Transaction / Cheque Reference</label>
+              <input 
+                type="text" 
+                class="clean-input font-mono" 
+                [(ngModel)]="paymentForm.transactionRef" 
+                placeholder="e.g. TXN-984214 / CHQ-104481" 
+              />
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+              <label class="clean-label">Chambers Notes</label>
+              <input 
+                type="text" 
+                class="clean-input" 
+                [(ngModel)]="paymentForm.notes" 
+                placeholder="Optional cashier note..." 
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-clean-secondary" (click)="closePaymentModal()">Cancel</button>
+          <button 
+            type="button" 
+            class="btn-primary-action" 
+            [disabled]="paymentForm.amount <= 0 || isSubmitting()" 
+            (click)="submitPayment()"
+          >
+            <span>{{ isSubmitting() ? 'Recording...' : '✓ Record Payment & Generate Receipt' }}</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- =========================================================================
+       7. OFFICIAL PAYMENT RECEIPT MODAL (Dual-Theme Compliant)
+       ========================================================================= -->
+  @if (selectedReceipt()) {
+    <div class="modal-clean-backdrop" (click)="closeReceiptModal()">
+      <div class="modal-window-clean receipt-modal-window" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div class="modal-header-left">
+            <div class="modal-header-icon-box icon-emerald">
+              <app-icon name="file-text" [size]="22" [strokeWidth]="2.2"></app-icon>
+            </div>
+            <div>
+              <h2 class="modal-clean-title">Official Chambers Receipt</h2>
+              <p class="modal-clean-sub">{{ selectedReceipt()?.receipt?.receiptNumber }} • Verified Payment</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeReceiptModal()" title="Close">✕</button>
+        </div>
+
+        <!-- Body: Printable Voucher -->
+        <div class="modal-clean-body">
+          <div class="receipt-voucher-card">
+            <div class="voucher-top-banner">
+              <h3 class="voucher-firm-title">PERERA & WICKRAMARATNE ASSOCIATES</h3>
+              <p class="voucher-firm-sub">Attorneys-at-Law & Notaries Public • Chambers Hulftsdorp, Colombo 12</p>
+              <div class="voucher-official-badge mt-2">OFFICIAL PAYMENT RECEIPT</div>
+            </div>
+
+            <div class="voucher-details-grid mt-4">
+              <div class="voucher-row">
+                <span class="v-label">Receipt Number:</span>
+                <span class="v-val font-mono text-gold">{{ selectedReceipt()?.receipt?.receiptNumber }}</span>
+              </div>
+              <div class="voucher-row">
+                <span class="v-label">Payment Date:</span>
+                <span class="v-val">{{ selectedReceipt()?.receipt?.receiptDate | date:'mediumDate' }}</span>
+              </div>
+              <div class="voucher-row">
+                <span class="v-label">Received From:</span>
+                <span class="v-val text-bright">{{ selectedReceipt()?.client?.name }}</span>
+              </div>
+              <div class="voucher-row">
+                <span class="v-label">Amount Paid:</span>
+                <span class="v-val text-emerald text-lg font-mono font-bold">LKR {{ selectedReceipt()?.amount | number:'1.2-2' }}</span>
+              </div>
+              <div class="voucher-row">
+                <span class="v-label">Amount in Words:</span>
+                <span class="v-val italic text-xs">{{ selectedReceipt()?.receipt?.amountInWords || 'Legal fee settlement' }}</span>
+              </div>
+              <div class="voucher-row">
+                <span class="v-label">Payment Method:</span>
+                <span class="v-val">{{ selectedReceipt()?.paymentMethod?.replace('_', ' ') }} (Ref: {{ selectedReceipt()?.transactionRef || 'Direct' }})</span>
+              </div>
+              <div class="voucher-row">
+                <span class="v-label">Invoice Ref:</span>
+                <span class="v-val font-mono">{{ selectedReceipt()?.invoice?.invoiceNumber }}</span>
+              </div>
+            </div>
+
+            <div class="voucher-signature-row mt-6">
+              <div class="sig-box">
+                <div class="sig-line-bar"></div>
+                <span class="sig-title-text">Authorized Chambers Cashier / Accountant</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-clean-secondary" (click)="closeReceiptModal()">Close</button>
+          <button type="button" class="btn-primary-action" onclick="window.print()">
+            <app-icon name="file-text" [size]="16" [strokeWidth]="2.2"></app-icon>
+            <span>🖨️ Print Official Receipt</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

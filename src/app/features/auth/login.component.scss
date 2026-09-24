@@ -1,0 +1,214 @@
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 30%, #172554 0%, #070c18 80%);
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+:host-context(body.light-mode) .login-wrapper,
+[data-theme="light"] .login-wrapper {
+  background: radial-gradient(circle at 50% 30%, #e2e8f0 0%, #cbd5e1 90%);
+}
+
+.login-theme-corner {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 20;
+}
+
+.btn-theme-toggle {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  color: var(--text-main);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+}
+
+.login-decor-circle-1 {
+  position: absolute;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, transparent 70%);
+  top: -150px;
+  right: -150px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.login-decor-circle-2 {
+  position: absolute;
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, transparent 70%);
+  bottom: -200px;
+  left: -200px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.login-card {
+  max-width: 540px;
+  width: 100%;
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 2.25rem;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+}
+
+.brand-icon {
+  font-size: 2.5rem;
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: 2.35rem;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.brand-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.w-full { width: 100%; }
+.btn-lg {
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  margin-bottom: 1.5rem;
+}
+
+.alert-danger {
+  background: rgba(244, 63, 94, 0.2);
+  border: 1.5px solid rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+}
+
+:host-context(body.light-mode) .alert-danger,
+[data-theme="light"] .alert-danger {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.demo-profiles-section {
+  margin-top: 2.25rem;
+}
+
+.demo-divider {
+  text-align: center;
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.demo-divider span {
+  background: var(--bg-surface);
+  padding: 0 1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.demo-btn {
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.demo-btn:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.role-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+
+  &.admin { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+  &.partner { background: rgba(245, 158, 11, 0.25); color: #fde047; }
+  &.attorney { background: rgba(56, 189, 248, 0.25); color: #7dd3fc; }
+  &.junior { background: rgba(52, 211, 153, 0.25); color: #6ee7b7; }
+  &.secretary { background: rgba(192, 132, 252, 0.25); color: #d8b4fe; }
+  &.accounts { background: rgba(45, 212, 191, 0.25); color: #5eead4; }
+}
+
+:host-context(body.light-mode) {
+  .role-badge.admin { color: #b91c1c; background: #fee2e2; }
+  .role-badge.partner { color: #b45309; background: #fef3c7; }
+  .role-badge.attorney { color: #0369a1; background: #e0f2fe; }
+  .role-badge.junior { color: #047857; background: #d1fae5; }
+  .role-badge.secretary { color: #6b21a8; background: #f3e8ff; }
+  .role-badge.accounts { color: #0f766e; background: #ccfbf1; }
+}
+
+.demo-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}

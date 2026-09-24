@@ -1,0 +1,413 @@
+<div class="finnova-dashboard">
+  <!-- =========================================================================
+       1. TOP HERO HEADER (Title + Subtitle + Action CTA Button)
+       ========================================================================= -->
+  <div class="dashboard-page-header">
+    <div class="header-titles">
+      <div class="header-back-row">
+        <h1 class="page-title">Legal Matters & Case Files</h1>
+      </div>
+      <p class="page-subtitle">Centralized case docket registry, litigation lifecycles, court filings, and judicial appearances.</p>
+    </div>
+
+    <div class="header-actions">
+      @if (authService.hasPermission('MATTER_CREATE')) {
+        <button type="button" class="btn-create-invoice" (click)="openIntakeModal()" id="btn-open-matter">
+          <span class="btn-plus-sym">+</span>
+          <span>Open New Legal Matter</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. COMPACT SUMMARY METRICS STRIP (Small-Sized Cards)
+       ========================================================================= -->
+  <div class="compact-kpi-strip">
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-indigo">
+        <app-icon name="folder-open" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Active Matters</span>
+        <div class="mini-kpi-val">{{ totalMattersCount() }} <span class="mini-kpi-sub">Total Dockets</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-rose">
+        <app-icon name="alert-circle" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">High Priority / Urgent</span>
+        <div class="mini-kpi-val">{{ urgentMattersCount() }} <span class="mini-kpi-sub">Priority Files</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-cyan">
+        <app-icon name="calendar" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Trial & Discovery Stage</span>
+        <div class="mini-kpi-val">{{ trialStageCount() }} <span class="mini-kpi-sub">In Court / Trial</span></div>
+      </div>
+    </div>
+
+    <div class="mini-kpi-card">
+      <div class="mini-kpi-icon icon-emerald">
+        <app-icon name="briefcase" [size]="18" [strokeWidth]="2.2"></app-icon>
+      </div>
+      <div class="mini-kpi-content">
+        <span class="mini-kpi-label">Land & Commercial Briefs</span>
+        <div class="mini-kpi-val">{{ landAndCommercialCount() }} <span class="mini-kpi-sub">Practice Matters</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. INTERACTIVE SECONDARY FILTER BAR
+       ========================================================================= -->
+  <div class="secondary-filter-bar">
+    <div class="filter-left-group">
+      <div class="active-filter-badge">
+        <span>Active filters</span>
+        <span class="filter-count-bubble">{{ activeFilterCount() }}</span>
+      </div>
+
+      <!-- Stage Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [(ngModel)]="stageFilter" (ngModelChange)="loadMatters()" id="filter-stage-select">
+          <option value="">All Workflow Stages</option>
+          <option value="INTAKE">1. Intake</option>
+          <option value="PLEADINGS">2. Pleadings</option>
+          <option value="DISCOVERY">3. Discovery</option>
+          <option value="TRIAL">4. Trial</option>
+          <option value="JUDGEMENT">5. Judgement</option>
+          <option value="APPEAL">6. Appeal</option>
+          <option value="EXECUTION">7. Execution</option>
+          <option value="CLOSED">8. Closed</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Practice Area Category Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [(ngModel)]="categoryFilter" (ngModelChange)="loadMatters()" id="filter-category-select">
+          <option value="">All Practice Areas</option>
+          <option value="LAND_DISPUTE">Land / Partition Suit</option>
+          <option value="COMMERCIAL">Commercial / Corporate</option>
+          <option value="FAMILY">Family / Testamentary</option>
+          <option value="CRIMINAL">Criminal Defense</option>
+          <option value="LABOUR">Labour / Employment</option>
+          <option value="CONSTITUTIONAL">Fundamental Rights / CA</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      <!-- Priority Filter Capsule -->
+      <div class="filter-dropdown-capsule">
+        <select class="capsule-select" [(ngModel)]="priorityFilter" (ngModelChange)="loadMatters()" id="filter-priority-select">
+          <option value="">All Priorities</option>
+          <option value="HIGH">High / Urgent</option>
+          <option value="MEDIUM">Medium Priority</option>
+          <option value="LOW">Low Priority</option>
+        </select>
+        <span class="capsule-chevron">▾</span>
+      </div>
+
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="btn-clear-filters" (click)="resetFilters()" title="Reset All Filters">
+          <span>✕ Reset</span>
+        </button>
+      }
+    </div>
+
+    <!-- Search Input on Right -->
+    <div class="filter-right-search">
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="15" [strokeWidth]="2" class="search-icon-svg"></app-icon>
+        <input 
+          type="text" 
+          class="crm-search-input" 
+          [(ngModel)]="searchQuery" 
+          (ngModelChange)="loadMatters()"
+          placeholder="Search matter no, title, client, court..."
+          id="matter-search-box"
+        />
+        @if (searchQuery) {
+          <button type="button" class="btn-clear-search" (click)="searchQuery=''; loadMatters()">✕</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. HIGH-CONTRAST MATTERS DATAGRID
+       ========================================================================= -->
+  <div class="matters-table-container">
+    <table class="finnova-matters-table">
+      <thead>
+        <tr>
+          <th style="width: 130px;">Matter Code</th>
+          <th>Case Title & Practice Area</th>
+          <th>Client Name</th>
+          <th>Court Case No.</th>
+          <th>Lead Counsel</th>
+          <th style="width: 120px;">Stage</th>
+          <th style="width: 110px;">Priority</th>
+          <th style="width: 140px; text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of matters(); track m.id) {
+          <tr class="matter-row">
+            <!-- Matter Code -->
+            <td>
+              <div class="matter-code-cell">
+                <span class="status-indicator-dot" [ngClass]="{
+                  'dot-green': m.status === 'ACTIVE' || !m.status,
+                  'dot-amber': m.stage === 'TRIAL' || m.stage === 'DISCOVERY',
+                  'dot-slate': m.stage === 'CLOSED'
+                }"></span>
+                <span class="matter-code-text">{{ m.matterNumber }}</span>
+              </div>
+            </td>
+
+            <!-- Case Title & Category -->
+            <td>
+              <div class="matter-title-cell">
+                <a [routerLink]="['/matters', m.id]" class="matter-main-title">
+                  {{ m.title }}
+                </a>
+                <div class="matter-category-chip-row">
+                  <span class="practice-chip" [ngClass]="{
+                    'chip-land': m.category === 'LAND_DISPUTE',
+                    'chip-comm': m.category === 'COMMERCIAL',
+                    'chip-family': m.category === 'FAMILY',
+                    'chip-crim': m.category === 'CRIMINAL',
+                    'chip-labour': m.category === 'LABOUR'
+                  }">
+                    {{ m.category | titlecase }}
+                  </span>
+                  @if (m.feeArrangement) {
+                    <span class="fee-type-chip">{{ m.feeArrangement }}</span>
+                  }
+                </div>
+              </div>
+            </td>
+
+            <!-- Client Info -->
+            <td>
+              <div class="client-cell">
+                <span class="client-name">{{ m.client?.name || 'Registered Client' }}</span>
+                @if (m.client?.clientNumber) {
+                  <span class="client-sub-num font-mono">{{ m.client?.clientNumber }}</span>
+                }
+              </div>
+            </td>
+
+            <!-- Court Case No. -->
+            <td>
+              @if (m.courtCases?.length > 0) {
+                <div class="court-case-cell">
+                  <span class="court-badge font-mono">{{ m.courtCases[0].officialCaseNumber }}</span>
+                  @if (m.courtCases[0].court?.name) {
+                    <span class="court-sub-name">{{ m.courtCases[0].court?.name }}</span>
+                  }
+                </div>
+              } @else {
+                <span class="pre-filing-chip">Pre-Filing Stage</span>
+              }
+            </td>
+
+            <!-- Lead Counsel -->
+            <td>
+              <div class="counsel-cell">
+                <div class="counsel-avatar">
+                  {{ (m.leadAttorney?.fullName || 'CA').substring(0, 2).toUpperCase() }}
+                </div>
+                <div class="counsel-info">
+                  <span class="counsel-name">{{ m.leadAttorney?.fullName || 'Assigned Counsel' }}</span>
+                  <span class="counsel-role">{{ m.leadAttorney?.role || 'Advocate' }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Stage -->
+            <td>
+              <span class="stage-capsule" [ngClass]="{
+                'stage-intake': m.stage === 'INTAKE',
+                'stage-pleadings': m.stage === 'PLEADINGS',
+                'stage-discovery': m.stage === 'DISCOVERY',
+                'stage-trial': m.stage === 'TRIAL',
+                'stage-judgement': m.stage === 'JUDGEMENT',
+                'stage-appeal': m.stage === 'APPEAL',
+                'stage-execution': m.stage === 'EXECUTION',
+                'stage-closed': m.stage === 'CLOSED'
+              }">
+                {{ m.stage || 'INTAKE' }}
+              </span>
+            </td>
+
+            <!-- Priority -->
+            <td>
+              <span class="priority-pill" [ngClass]="{
+                'priority-high': m.priority === 'HIGH' || m.priority === 'URGENT',
+                'priority-med': m.priority === 'MEDIUM',
+                'priority-low': m.priority === 'LOW' || !m.priority
+              }">
+                <span class="pill-dot"></span>
+                {{ m.priority || 'NORMAL' }}
+              </span>
+            </td>
+
+            <!-- Action Button -->
+            <td style="text-align: right;">
+              <a [routerLink]="['/matters', m.id]" class="btn-open-workspace" id="btn-open-workspace-{{ m.id }}">
+                <span>Open File</span>
+                <span class="arrow-sym">➔</span>
+              </a>
+            </td>
+          </tr>
+        }
+
+        @if (matters().length === 0) {
+          <tr>
+            <td colspan="8" class="empty-state-cell">
+              <div class="empty-docket-box">
+                <app-icon name="folder-open" [size]="36" [strokeWidth]="1.5" class="empty-icon"></app-icon>
+                <div class="empty-title">No Legal Matters Found</div>
+                <p class="empty-desc">No case files match the current search filters or criteria.</p>
+                <button type="button" class="btn-clear-filters" (click)="resetFilters()">
+                  <span>Reset All Filters</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- =========================================================================
+       5. DUAL-THEME (+ NEW MATTER INTAKE) MODAL POPUP
+       ========================================================================= -->
+  @if (showIntakeModal()) {
+    <div class="modal-clean-backdrop" (click)="showIntakeModal.set(false)">
+      <div class="modal-window-clean modal-lg" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="modal-clean-header">
+          <div>
+            <span class="modal-badge-chip">Case Docket Registration</span>
+            <h3 class="modal-clean-title">New Legal Matter Intake Wizard</h3>
+            <p class="modal-clean-sub">Create a centralized matter file, bind client identity, and assign lead counsel.</p>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showIntakeModal.set(false)" title="Close Window">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-clean-body">
+          <div class="form-clean-group mb-4">
+            <label class="form-clean-label">Matter / Case Title <span class="required-star">*</span></label>
+            <input 
+              type="text" 
+              class="form-clean-input" 
+              [(ngModel)]="newMatter.title" 
+              placeholder="e.g. Land Partition Suit & Injunction - Colombo 07" 
+              required 
+            />
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Client Identity <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newMatter.clientId" required>
+                <option value="">-- Select Registered Client --</option>
+                @for (c of clients(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.clientNumber }})</option>
+                }
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Practice Area / Category <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newMatter.category" required>
+                <option value="LAND_DISPUTE">Land / Property Dispute</option>
+                <option value="COMMERCIAL">Commercial / Contract Law</option>
+                <option value="FAMILY">Family Law / Divorce / Testamentary</option>
+                <option value="CRIMINAL">Criminal Defense</option>
+                <option value="LABOUR">Labour Tribunal</option>
+                <option value="CONSTITUTIONAL">Fundamental Rights / CA</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Lead Assigned Counsel <span class="required-star">*</span></label>
+              <select class="form-clean-select" [(ngModel)]="newMatter.leadAttorneyId" required>
+                <option value="" disabled>-- Select Assigned Counsel --</option>
+                @for (u of attorneys(); track u.id) {
+                  <option [value]="u.id">{{ u.fullName }} ({{ u.role }})</option>
+                }
+              </select>
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Priority Level</label>
+              <select class="form-clean-select" [(ngModel)]="newMatter.priority">
+                <option value="HIGH">High / Urgent Priority</option>
+                <option value="MEDIUM">Medium Priority</option>
+                <option value="LOW">Low Priority</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Opposing Party Name</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="newMatter.opposingParty" placeholder="Opponent Full Name / Entity" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Opposing Counsel / Firm</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="newMatter.opposingCounsel" placeholder="e.g. Attorney-at-Law / Law Firm" />
+            </div>
+          </div>
+
+          <div class="form-clean-grid-2 mb-4">
+            <div class="form-clean-group">
+              <label class="form-clean-label">Court Forum / Jurisdiction</label>
+              <input type="text" class="form-clean-input" [(ngModel)]="newMatter.courtJurisdiction" placeholder="e.g. District Court of Colombo / Commercial High Court" />
+            </div>
+            <div class="form-clean-group">
+              <label class="form-clean-label">Fee Arrangement</label>
+              <select class="form-clean-select" [(ngModel)]="newMatter.feeArrangement">
+                <option value="FIXED">Fixed Lump Sum</option>
+                <option value="HOURLY">Hourly Billing Rate</option>
+                <option value="RETAINER">Monthly Retainer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-clean-group">
+            <label class="form-clean-label">Matter Summary & Initial Instructions</label>
+            <textarea 
+              class="form-clean-textarea" 
+              rows="3" 
+              [(ngModel)]="newMatter.description" 
+              placeholder="Record case background, key facts, legal strategies, and client expectations..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-clean-footer">
+          <button type="button" class="btn-ghost-action" (click)="showIntakeModal.set(false)">Cancel</button>
+          <button type="button" class="btn-submit-action" (click)="saveMatter()">
+            <span>Open Matter File</span>
+            <span class="btn-arrow-sym">➔</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
